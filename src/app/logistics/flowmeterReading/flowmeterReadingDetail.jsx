@@ -1,13 +1,17 @@
 import { useEffect, useState } from "react";
-import { Button, Table, Card, message,Tag } from "antd";
+import { Button, Table, Card, message, Tag } from "antd";
 import { useHistory, useParams } from "react-router-dom";
 import moment from "moment";
 import dayjs from "dayjs";
-import { AxiosWithLoading, ErrorPrinter, SpinLoading } from "../../../constants/Common";
+import {
+  AxiosWithLoading,
+  ErrorPrinter,
+  SpinLoading,
+} from "../../../constants/Common";
 import { APIHelper } from "../../../constants/APIHelper";
 import MobilePageShell from "../../../constants/MobilePageShell";
-import SignaturePreviewModal from "../../../constants/SignaturePreviewModal"
-import SignaturePadJpeg from "../../../constants/SignaturePadJPeg";
+import SignaturePreviewModal from "../../../constants/SignaturePreviewModal";
+import SignaturePadJpeg from "../../../constants/SignaturePadJpeg";
 
 export const FlowmeterReadingDetail = () => {
   const [data, setData] = useState([]);
@@ -64,28 +68,26 @@ export const FlowmeterReadingDetail = () => {
   };
 
   const signDO = async (DONo, Signature) => {
-      try {
+    try {
       let body = {
         DONo: DONo,
-        Signature: Signature
+        Signature: Signature,
       };
-      await AxiosWithLoading(
-        APIHelper.postConfig("/logistics/eSignDO", body)
-      );
+      await AxiosWithLoading(APIHelper.postConfig("/logistics/eSignDO", body));
       message.success("DO Is Signed.");
       initial();
     } catch (error) {
       ErrorPrinter(error);
     }
-  }
+  };
   const performESign = (DONo) => {
     setVisibleESign(true);
     setESignDONo(DONo);
-  }
+  };
   const viewSignature = async (hexBlob) => {
     setVisibleSignatureModal(true);
     setSignatureBase64(hexBlob);
-  }
+  };
   const columns = [
     {
       title: "Delivery Orders",
@@ -110,11 +112,13 @@ export const FlowmeterReadingDetail = () => {
                   color: "#377188",
                 }}
               >
-                DO No: {record.DONo}      {record.DeliveredSignDate && (
-      <Tag color="green">
-        Signed on {dayjs(record.DeliveredSignDate).format("DD MMM YYYY")}
-      </Tag>
-    )}
+                DO No: {record.DONo}{" "}
+                {record.DeliveredSignDate && (
+                  <Tag color="green">
+                    Signed on{" "}
+                    {dayjs(record.DeliveredSignDate).format("DD MMM YYYY")}
+                  </Tag>
+                )}
               </div>
               <div style={{ color: "#595959" }}>
                 Customer Name: {record.AccountShortName}
@@ -179,25 +183,26 @@ export const FlowmeterReadingDetail = () => {
                     Lock DO
                   </Button>
                 )}
-                {record.FlowmeterReading != null && record.DeliveredSignDate == null && (
-                  <Button
-                    type="primary"
-                    style={{ background: "#377188", borderColor: "#377188" }}
-                    onClick={() => performESign(record.DONo)}
-                  >
-                    Perform E-Sign
-                  </Button>
-                )}
-                {record.DeliveredSignDate != null && record.SignatureImageBlob != null && 
-                  <Button
-                    type="primary"
-                    style={{ background: "#377188", borderColor: "#377188" }}
-                    onClick={() => viewSignature(record.SignatureImageBlob)}
-                  >
-                    view signature
-                  </Button>
-
-                }
+                {record.FlowmeterReading != null &&
+                  record.DeliveredSignDate == null && (
+                    <Button
+                      type="primary"
+                      style={{ background: "#377188", borderColor: "#377188" }}
+                      onClick={() => performESign(record.DONo)}
+                    >
+                      Perform E-Sign
+                    </Button>
+                  )}
+                {record.DeliveredSignDate != null &&
+                  record.SignatureImageBlob != null && (
+                    <Button
+                      type="primary"
+                      style={{ background: "#377188", borderColor: "#377188" }}
+                      onClick={() => viewSignature(record.SignatureImageBlob)}
+                    >
+                      view signature
+                    </Button>
+                  )}
               </div>
             </Card>
           </>
@@ -241,7 +246,11 @@ export const FlowmeterReadingDetail = () => {
             signDO(eSignDONo, jpegDataUrl);
           }}
         />
-        <SignaturePreviewModal visible={visibleSignatureModal} setVisible={setVisibleSignatureModal} base64String={signatureBase64} />
+        <SignaturePreviewModal
+          visible={visibleSignatureModal}
+          setVisible={setVisibleSignatureModal}
+          base64String={signatureBase64}
+        />
       </>
     </MobilePageShell>
   );
