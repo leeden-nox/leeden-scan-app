@@ -1,8 +1,10 @@
-import { Card, Layout, Modal, Table, DatePicker } from "antd";
+import { DatePicker, Layout, Modal } from "antd";
+import { PullToRefresh } from "antd-mobile";
+import dayjs from "dayjs";
 import _ from "lodash";
 import { useEffect, useState } from "react";
 import { GoBellFill } from "react-icons/go";
-import { IoIosLogOut } from "react-icons/io";
+import { IoIosLogOut, IoMdSearch } from "react-icons/io";
 import { IoSettings } from "react-icons/io5";
 import { LuSquareArrowRight } from "react-icons/lu";
 import { SlArrowRight } from "react-icons/sl";
@@ -12,10 +14,7 @@ import { AxiosWithLoading, ErrorPrinter, getUsernamefromToken, RemoveLocalStorag
 import { PathLink } from "../constants/PathLink";
 import { LocalStorage, SessionStorage } from "../constants/Storage";
 import LoginPage from "./login/page";
-import { PullToRefresh } from "antd-mobile";
-import dayjs from "dayjs";
 const { Content } = Layout;
-const { RangePicker } = DatePicker;
 
 const MainMenu = () => {
   const location = useLocation();
@@ -23,7 +22,7 @@ const MainMenu = () => {
   const [openSetting, setOpenSetting] = useState(false);
   const [openNotification, setOpenNotification] = useState(false);
   const [notificationData, setNotificationData] = useState([])
-  const [dateRange, setDateRange] = useState([null, null])
+  const [dateRange, setDateRange] = useState({start: dayjs().subtract(7, 'day'), end: dayjs()})
   const [branchList, setBranchList] = useState([]);
   const [refresh, setRefresh] = useState(false)
   const history = useHistory()
@@ -73,13 +72,12 @@ const MainMenu = () => {
   const getMobileNotification = async () => {
     try{
       let body = {
-        StartDate: '2025-07-15',
-        EndDate: '2025-08-29'
+        StartDate: dateRange.start.format('YYYY-MM-DD'),
+        EndDate: dateRange.end.format('YYYY-MM-DD')
       }
       const response = await AxiosWithLoading({
         ...APIHelper.postConfig('/account/getMobileNotifications', body)
       })
-      console.log('data: ', response.data.Table)
       setNotificationData(response.data.Table)
     } catch (error) {
       ErrorPrinter(error);
@@ -272,12 +270,25 @@ const MainMenu = () => {
                 maskClosable={false}
                 footer={null}
               >
-                <RangePicker
-                  showTime
-                  format="YYYY-MM-DD"
-                  onChange={(dates) => setDateRange(dates)}
-                  style={{ marginBottom: 16 }}
-                />
+                <div className="d-flex justify-content-between" style={{ marginBottom: 16, marginTop: 20 }}>
+                  <DatePicker 
+                    className={'compact-calender'} 
+                    onChange={(date) => setDateRange({...dateRange, start: date})} 
+                    value={dateRange.start} 
+                    allowClear={false} 
+                    size={"small"} 
+                  />
+                  <div className="d-flex align-items-center" style={{gap: "7px"}}>
+                    <DatePicker 
+                      className={'compact-calender'} 
+                      onChange={(date) => setDateRange({...dateRange, end: date})} 
+                      value={dateRange.end} 
+                      size={"small"}
+                      allowClear={false}
+                    />
+                    <IoMdSearch style={{fontSize:'23px'}} onClick={() => getMobileNotification()} />
+                  </div>
+                </div>
                 {notificationData.map((item, index) => (
                   <div key={index} className="notification-card">
                     <div className="d-flex justify-content-between notification-header">

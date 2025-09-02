@@ -59,7 +59,6 @@ export const PickListQtyDetail = () => {
         APIHelper.postConfig("/logistics/getPickListQtyDetailByProdCode", body)
       );
 
-      console.log(response.data.Records.records);
       if (
         response.data.Records.records.length === 0 ||
         response.data.Records.records[0].OrderedProdCode === "invalid"
@@ -104,13 +103,11 @@ export const PickListQtyDetail = () => {
         APIHelper.postConfig("/logistics/getPickListQtyLocations", body)
       );
       setModalData(response.data.Records.records);
-      console.log(response.data.Records.records);
       setSelectedProdCode(prodCode);
       setSelectedWarehouse(warehouse);
       setShowModal(true);
     } catch (error) {
-      console.log(error);
-      ErrorPrinter(error, history);
+      ErrorPrinter(error);
     }
   };
   const closeModal = () => {

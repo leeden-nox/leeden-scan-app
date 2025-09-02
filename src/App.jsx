@@ -10,6 +10,8 @@ import { PathLink } from './constants/PathLink';
 import PickListQty from './app/warehouse/pick-list/page';
 import { PickListQtyDetail } from './app/warehouse/pick-list/pickListQtyDetail';
 import { PickListQtyDetailPick } from './app/warehouse/pick-list/pickListQtyDetailPick';
+import { FlowmeterReading } from './app/logistics/flowmeterReading/flowmeterReading';
+import { FlowmeterReadingDetail } from './app/logistics/flowmeterReading/flowmeterReadingDetail';
 
 function App() {
 
@@ -24,7 +26,11 @@ function App() {
           <Route exact path={PathLink.pickListQty}><PickListQty /></Route>
           <Route exact path={PathLink.pickListQtyDetail} component={PickListQtyDetail} />
           <Route exact path={PathLink.pickListQtyDetailPick} component={PickListQtyDetailPick} />
-          
+
+          {/* Flowmeter Reading */}
+          <Route exact path={PathLink.flowmeterReading} component={FlowmeterReading} />
+          <Route exact path={PathLink.flowmeterReadingDetail} component={FlowmeterReadingDetail} />
+
         </Switch>
       </BrowserRouter>
     </>
