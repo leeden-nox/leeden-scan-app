@@ -23,6 +23,16 @@ jobs:
         with:
           node-version: "22.x"
 
+      - name: Cache npm and node_modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.npm
+            node_modules
+          key: ${{ runner.os }}-node-22-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
       - name: npm install, build, and test
         run: |
           npm install
@@ -50,5 +60,5 @@ jobs:
         with:
           app-name: "leeden-scan"
           slot-name: "Production"
-          package: node-app
+          package: .
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_DD5699CD412B4295A77CD4D0F4A15B15 }}
