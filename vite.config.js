@@ -14,7 +14,9 @@ export default defineConfig({
         short_name: "Leeden Scan app",
         description: "To replace old leeden scanner and CMS scanner",
         start_url: "/",
-        display: "standalone"
+        display: "standalone",
+        theme_color: "#000000",
+        background_color: "#ffffff"
       }
     })
   ],
