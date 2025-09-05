@@ -53,8 +53,7 @@ const MainMenu = () => {
         );
       }
       const response = await AxiosWithLoading({
-        ...APIHelper.getConfig("/account/getuseraccessmobilefunc"),
-        baseURL: import.meta.env.VITE_LMS_API_URL
+        ...APIHelper.getConfig("/account/getuseraccessmobilefunc")
       });
       setMenu(response.data.userAccessNextScanList);
       setBranchList(
