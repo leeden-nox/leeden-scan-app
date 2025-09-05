@@ -110,6 +110,28 @@ const MainMenu = () => {
             <PullToRefresh onRefresh={() => {setRefresh(!refresh); getCurrenctBranchInfo()}}>
               <div className={'page-container'}>
                 <div className={"screen-navigation"}>
+                  <IoIosLogOut
+                    size={22}
+                    strokeWidth={20}
+                    style={{
+                      color: "white",
+                      marginRight: "5px"
+                    }}
+                    onClick={() => {
+                      Modal.confirm({
+                        title: "Leaveing Leeeden scan app?",
+                        content: "Are you sure you want to leave the app?",
+                        okText: "Leave",
+                        cancelText: "Stay",
+                        centered: true,
+                        maskClosable: false,
+                        onOk: () => {
+                          RemoveLocalStorageOnLogout();
+                          history.push(PathLink.login);
+                        }
+                      })
+                    }}
+                  />
                   <span className={"screen-title"}>
                     {sessionStorage.getItem(SessionStorage.DIVISION_BRANCH_NAME)}
                   </span>

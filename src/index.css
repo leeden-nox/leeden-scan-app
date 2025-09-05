@@ -145,7 +145,7 @@
       rgba(0, 190, 242, 1) 30%,
       rgba(95, 177, 128, 1) 70%
     );
-  position: absolute;
+  position: fixed;
   top: 0;
 }
 .screen-title {

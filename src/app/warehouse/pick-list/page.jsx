@@ -37,22 +37,9 @@ export default function PickListQty() {
     getPickListQtyDO();
   }, [location]);
 
-  const confirmLeave = () => {
-    Modal.confirm({
-      title: "Leave Pick List?",
-      content: "Are you sure you want to exit this function?",
-      okText: "Leave",
-      cancelText: "Stay",
-      centered: true,
-      maskClosable: false,
-      onOk: () => {
-        history.push('/');
-      },
-    });
-  };
   if (!authorized) {
     return (
-      <MobilePageShell title={"Pick List"} onBack={confirmLeave} onRefresh={getPickListQtyDO}>
+      <MobilePageShell title={"Pick List"} onBack={() => history.push('/')} onRefresh={getPickListQtyDO}>
         <UnauthorizedPage title={"View Pick List Qty (4.4.1, 1)"} subTitle={"Sorry, you are not authorized to access this page."}/>
       </MobilePageShell>
     );
@@ -65,7 +52,7 @@ export default function PickListQty() {
           <Route exact path={'/'} render={() => <MainMenu />} />
         </Switch>
         <Route exact path={PathLink.pickListQty}>
-                <MobilePageShell title={"Pick List"} onBack={confirmLeave} onRefresh={getPickListQtyDO}>
+                <MobilePageShell title={"Pick List"} onBack={() => history.push('/')} onRefresh={getPickListQtyDO}>
                   <SpinLoading />
                   {data.map((doItem) => (
                     <DOCard key={doItem.DONo} doData={doItem} onRefresh={() => getPickListQtyDO()} />

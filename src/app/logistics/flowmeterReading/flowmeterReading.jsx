@@ -94,19 +94,6 @@ export const FlowmeterReading = () => {
       },
     },
   ];
-  const confirmLeave = () => {
-    Modal.confirm({
-      title: "Leave Flowmeter reading?",
-      content: "Are you sure you want to exit this function?",
-      okText: "Leave",
-      cancelText: "Stay",
-      centered: true,
-      maskClosable: false,
-      onOk: () => {
-        history.push('/');
-      },
-    });
-  };
 
   useEffect(() => {
     const skippedRecords = (currentPage - 1) * pageSize;
@@ -115,7 +102,7 @@ export const FlowmeterReading = () => {
   
   if (!authorized) {
     return (
-      <MobilePageShell title={"Flowmeter Reading"} onBack={confirmLeave} onRefresh={initial}>
+      <MobilePageShell title={"Flowmeter Reading"} onBack={() => history.push('/')} onRefresh={initial}>
         <UnauthorizedPage title={"View Flowmeter Reading (4.13.1, 1)"} subTitle={"Sorry, you are not authorized to access this page."}/>
       </MobilePageShell>
     )
@@ -128,7 +115,7 @@ export const FlowmeterReading = () => {
         <Route exact path={PathLink.flowmeterReading}>
           <MobilePageShell
             title={"Flowmeter Reading"}
-            onBack={confirmLeave}
+            onBack={() => history.push('/')}
             onRefresh={() => {
               const skippedRecords = (currentPage - 1) * pageSize;
               initial(skippedRecords, pageSize);
