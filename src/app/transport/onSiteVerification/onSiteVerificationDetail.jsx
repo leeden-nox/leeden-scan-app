@@ -109,7 +109,7 @@ const columns = [
       onRefresh={() => initial()}
     >
       <>
-        <SpinLoading />
+        {/* <SpinLoading /> */}
         <Table
           dataSource={data}
           columns={columns}
