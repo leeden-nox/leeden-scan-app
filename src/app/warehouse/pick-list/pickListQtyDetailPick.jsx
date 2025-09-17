@@ -151,40 +151,7 @@ export const PickListQtyDetailPick = () => {
 
         setBatchSerialData(response2.data.Records.records);
 
-          setSerialList([
-            {
-                ItemCode: "O4310642619",
-                Warehouse: "01",
-                Serial: "5457015",
-                ManufacturingDate: "",
-                ExpiryDate: "",
-                AdmissionDate: "8/15/2025 12:00:00 AM"
-            },
-            {
-                ItemCode: "O4310642619",
-                Warehouse: "01",
-                Serial: "5489008",
-                ManufacturingDate: "",
-                ExpiryDate: "",
-                AdmissionDate: "8/15/2025 12:00:00 AM"
-            },
-            {
-                ItemCode: "O4310642619",
-                Warehouse: "01",
-                Serial: "5489009",
-                ManufacturingDate: "",
-                ExpiryDate: "",
-                AdmissionDate: "8/15/2025 12:00:00 AM"
-            },
-            {
-                ItemCode: "O4310642619",
-                Warehouse: "01",
-                Serial: "5678027",
-                ManufacturingDate: "",
-                ExpiryDate: "",
-                AdmissionDate: "8/15/2025 12:00:00 AM"
-            }
-        ]);
+        setSerialList(response3.data);
       }
     } catch (error) {
       setAuthorized(false);
@@ -376,40 +343,7 @@ const validatePicking = async (DetailNo) => {
           UOM: UOM,
         })
       );
-      setSerialList([
-        {
-            ItemCode: "O4310642619",
-            Warehouse: "01",
-            Serial: "5457015",
-            ManufacturingDate: "",
-            ExpiryDate: "",
-            AdmissionDate: "8/15/2025 12:00:00 AM"
-        },
-        {
-            ItemCode: "O4310642619",
-            Warehouse: "01",
-            Serial: "5489008",
-            ManufacturingDate: "",
-            ExpiryDate: "",
-            AdmissionDate: "8/15/2025 12:00:00 AM"
-        },
-        {
-            ItemCode: "O4310642619",
-            Warehouse: "01",
-            Serial: "5489009",
-            ManufacturingDate: "",
-            ExpiryDate: "",
-            AdmissionDate: "8/15/2025 12:00:00 AM"
-        },
-        {
-            ItemCode: "O4310642619",
-            Warehouse: "01",
-            Serial: "5678027",
-            ManufacturingDate: "",
-            ExpiryDate: "",
-            AdmissionDate: "8/15/2025 12:00:00 AM"
-        }
-    ]);
+      setSerialList(response.data);
       setShowSerialModal(true);
     } catch (error) {
       ErrorPrinter(error);
