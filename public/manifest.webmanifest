@@ -1,0 +1,12 @@
+{
+  "name": "Leeden Scan app PWA",
+  "short_name": "Leeden Scan app",
+  "description": "To replace old leeden scanner and CMS scanner",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#000000",
+  "lang": "en",
+  "scope": "/",
+  "icons": [{ "src": "logo.png", "sizes": "192x192", "type": "image/png" }]
+}

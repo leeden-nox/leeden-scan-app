@@ -12,7 +12,9 @@ import { PickListQtyDetail } from './app/warehouse/pick-list/pickListQtyDetail';
 import { PickListQtyDetailPick } from './app/warehouse/pick-list/pickListQtyDetailPick';
 import { FlowmeterReading } from './app/logistics/flowmeterReading/flowmeterReading';
 import { FlowmeterReadingDetail } from './app/logistics/flowmeterReading/flowmeterReadingDetail';
-
+import { OnSiteVerification } from './app/transport/onSiteVerification/OnSiteVerification';
+import { onSiteVerificationDetail } from './app/transport/onSiteVerification/onSiteVerificationDetail';
+import { OnSiteVerificationDetailSerial } from './app/transport/onSiteVerification/OnSiteVerificationDetailSerial';
 function App() {
 
   return (
@@ -30,6 +32,14 @@ function App() {
           {/* Flowmeter Reading */}
           <Route exact path={PathLink.flowmeterReading} component={FlowmeterReading} />
           <Route exact path={PathLink.flowmeterReadingDetail} component={FlowmeterReadingDetail} />
+
+          {/* On Site Verification */}
+          <Route exact path={PathLink.onSiteVerification}> <OnSiteVerification /></Route>
+          <Route exact path={PathLink.onSiteVerificationDetail} component={onSiteVerificationDetail} />
+          <Route exact path={PathLink.onSiteVerificationDetailSerial} component={OnSiteVerificationDetailSerial} />
+
+
+
 
         </Switch>
       </BrowserRouter>

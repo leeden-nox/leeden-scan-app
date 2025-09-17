@@ -9,7 +9,6 @@ import { AxiosWithLoading, ErrorPrinter, SpinLoading } from "../../constants/Com
 import { APIHelper } from "../../constants/APIHelper";
 
 export default function LoginPage() {
-  const [passwordVisible, setPasswordVisible] = useState(false);
   const [windowSize, setWindowSize] = useState({ width: 0, height: 0 });
   const [form] = Form.useForm();
   const history = useHistory()
@@ -113,14 +112,11 @@ export default function LoginPage() {
           >
             <div className={"login-field"}>
               <TbLockPassword className={"login-icon"} />
-              <Input.Password
+              <Input
                 className={"login-input"}
+                type={"password"}
                 placeholder="Password"
                 autoComplete="current-password"
-                visibilityToggle={{
-                  visible: passwordVisible,
-                  onVisibleChange: setPasswordVisible
-                }}
               />
             </div>
           </Form.Item>

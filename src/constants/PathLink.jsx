@@ -5,4 +5,7 @@ export const PathLink = {
   pickListQtyDetailPick: '/pick-list/:doNo/:id',
   flowmeterReading: "/flowmeter-reading",
   flowmeterReadingDetail: "/flowmeter-reading/:id",
+  onSiteVerification: "/on-site-verification",
+  onSiteVerificationDetail: "/on-site-verification/:id",
+  onSiteVerificationDetailSerial: "/on-site-verification/:id/:doNo",
 }
