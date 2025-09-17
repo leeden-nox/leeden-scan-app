@@ -66,13 +66,13 @@ export const PickListQtyDetail = () => {
         playErrorSound();
         message.error("Invalid Product Code for this DO");
       } else if (response.data.Records.records.length === 1) {
-        if (response.data.Records.records[0].TrackedBySerial) {
-          message.error(
-            "This item is tracked by serial, function not available yet."
-          );
-          playErrorSound();
-          return;
-        }
+        // if (response.data.Records.records[0].TrackedBySerial) {
+        //   message.error(
+        //     "This item is tracked by serial, function not available yet."
+        //   );
+        //   playErrorSound();
+        //   return;
+        // }
         playSound();
         history.push({
           pathname:
@@ -221,12 +221,12 @@ const DODetailCard = ({ doDetailItem, viewLocations }) => {
   } = doDetailItem;
   const history = useHistory();
   const routeToDetail = () => {
-    if (TrackedBySerial) {
-      message.error(
-        "This item is tracked by serial, function not available yet."
-      );
-      return;
-    }
+    // if (TrackedBySerial) {
+    //   message.error(
+    //     "This item is tracked by serial, function not available yet."
+    //   );
+    //   return;
+    // }
     history.push({
       pathname: PathLink.pickListQty + "/" + DONo + "/" + DetailNo,
     });

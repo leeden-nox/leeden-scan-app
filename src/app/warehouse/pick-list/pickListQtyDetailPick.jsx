@@ -47,6 +47,10 @@ export const PickListQtyDetailPick = () => {
   const [batchList, setBatchList] = useState([]);
   const [showBatchModal, setShowBatchModal] = useState(false);
   const [selectedBatch, setSelectedBatch] = useState(null);
+  // serial
+  const [serialList, setSerialList] = useState([]);
+  const [showSerialModal, setShowSerialModal] = useState(false);
+  const [selectedSerial, setSelectedSerial] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
   const [isFulFilled, setisFulFilled] = useState(true);
@@ -91,16 +95,12 @@ export const PickListQtyDetailPick = () => {
 
         const pickedData = response2.data.Records.records;
 
-        // console.log(pickedData);
-        // console.log(headerData);
         const amountPickedInHeader = headerData ? headerData[0].QtyPicked : 0;
         const sumOfPickedInSerialRow = pickedData.reduce((sum, item) => {
           const qty = parseFloat(item.Qty) || 0;
           return sum + qty;
         }, 0);
-        console.log(amountPickedInHeader);
-        console.log(sumOfPickedInSerialRow);
-        console.log(pickedData.length);
+        
         if (
           amountPickedInHeader != sumOfPickedInSerialRow &&
           pickedData.length > 1
@@ -134,11 +134,64 @@ export const PickListQtyDetailPick = () => {
 
         setBatchSerialData(merged);
       }
+      else if (response.data.Records.records && response.data.Records.records[0].TrackedBySerial) {
+        const response2 = await AxiosWithLoading(
+          APIHelper.postConfig("/logistics/getPickListQtyBatchSerial", {
+            DONo: DONo,
+            DetailNo: id,
+          })
+        );
+        const response3 = await AxiosWithLoading(
+          APIHelper.postConfig("/logistics/pickListQtyGetSerialNoSAP", {
+            ProdCode: response.data.Records.records[0].OrderedProdCode,
+            Warehouse: response.data.Records.records[0].Warehouse,
+            UOM: response.data.Records.records[0].UOM,
+          })
+        );
+
+        setBatchSerialData(response2.data.Records.records);
+
+          setSerialList([
+            {
+                ItemCode: "O4310642619",
+                Warehouse: "01",
+                Serial: "5457015",
+                ManufacturingDate: "",
+                ExpiryDate: "",
+                AdmissionDate: "8/15/2025 12:00:00 AM"
+            },
+            {
+                ItemCode: "O4310642619",
+                Warehouse: "01",
+                Serial: "5489008",
+                ManufacturingDate: "",
+                ExpiryDate: "",
+                AdmissionDate: "8/15/2025 12:00:00 AM"
+            },
+            {
+                ItemCode: "O4310642619",
+                Warehouse: "01",
+                Serial: "5489009",
+                ManufacturingDate: "",
+                ExpiryDate: "",
+                AdmissionDate: "8/15/2025 12:00:00 AM"
+            },
+            {
+                ItemCode: "O4310642619",
+                Warehouse: "01",
+                Serial: "5678027",
+                ManufacturingDate: "",
+                ExpiryDate: "",
+                AdmissionDate: "8/15/2025 12:00:00 AM"
+            }
+        ]);
+      }
     } catch (error) {
       setAuthorized(false);
       ErrorPrinter(error);
     }
   };
+
   const updatePickList = async (DONo, DetailNo, QtyPicked) => {
     if (pickedQty === null || pickedQty < 0 || pickedQty > data[0].OrderedQty) {
       message.error("Please enter a valid picked quantity");
@@ -156,7 +209,7 @@ export const PickListQtyDetailPick = () => {
       getPickListQtyDetail();
       message.success("Pick List updated successfully");
     } catch (error) {
-      message.error("Failed to update Pick List");
+      // message.error("Failed to update Pick List");
       ErrorPrinter(error);
     }
   };
@@ -183,11 +236,36 @@ export const PickListQtyDetailPick = () => {
     message.success("Pick List updated successfully");
   };
 
+  const updatePickListSerial = async (DONo, DetailNo) => {
+    let body = {
+      DONo: DONo,
+      DetailNo: DetailNo,
+      Serial: selectedSerial.Serial,
+      MfrSerialNo: selectedSerial.MfrSerialNo || '',
+      AdmissionDate: selectedSerial.AdmissionDate,
+      Warehouse: selectedSerial.Warehouse,
+    };
+    await AxiosWithLoading(
+      APIHelper.postConfig("/logistics/pickListSerialPick", body)
+    );
+    getPickListQtyDetail();
+    message.success("Pick List updated successfully");
+  }
+
   const scanBarcode = (barcode) => {
     if (data[0].TrackedByBatch) {
       const matchedBatch = batchList.find((item) => item.BatchNo === barcode);
       if (matchedBatch) {
         setSelectedBatch(matchedBatch);
+        playSound();
+
+        return;
+      }
+    }
+    else if (data[0].TrackedBySerial) {
+      const matchedSerial = serialList.find((item) => item.SerialNo === barcode);
+      if (matchedSerial) {
+        setSelectedSerial(matchedSerial);
         playSound();
 
         return;
@@ -215,12 +293,10 @@ export const PickListQtyDetailPick = () => {
         Warehouse: warehouse,
         UOM: UOM,
       };
-      console.log("getPickListBatch body:", body);
       const response = await AxiosWithLoading(
         APIHelper.postConfig("/logistics/pickListQtyGetBatchNoSAP", body)
       );
       setBatchList(response.data);
-      console.log(response.data);
       setShowBatchModal(true);
     } catch (error) {
       ErrorPrinter(error);
@@ -246,7 +322,6 @@ const validatePicking = async (DetailNo) => {
       getPickListQtyDetail();
     } catch (error) {
       ErrorPrinter(error);
-      message.error("Failed to pick batch");
     }
 }
 
@@ -270,9 +345,7 @@ const validatePicking = async (DetailNo) => {
       message.success("Batch pick deleted successfully");
       getPickListQtyDetail();
     } catch (error) {
-      console.log(error);
       ErrorPrinter(error);
-      message.error("Failed to delete batch pick");
     }
   };
 
@@ -292,6 +365,56 @@ const validatePicking = async (DetailNo) => {
     setModalFulfillVisible(false);
     setItemToFulFill(null);
   };
+
+  // serial
+  const getPickListSerial = async (prodCode, warehouse, UOM) => {
+    try {
+      const response = await AxiosWithLoading(
+        APIHelper.postConfig("/logistics/pickListQtyGetSerialNoSAP", {
+          ProdCode: prodCode,
+          Warehouse: warehouse,
+          UOM: UOM,
+        })
+      );
+      setSerialList([
+        {
+            ItemCode: "O4310642619",
+            Warehouse: "01",
+            Serial: "5457015",
+            ManufacturingDate: "",
+            ExpiryDate: "",
+            AdmissionDate: "8/15/2025 12:00:00 AM"
+        },
+        {
+            ItemCode: "O4310642619",
+            Warehouse: "01",
+            Serial: "5489008",
+            ManufacturingDate: "",
+            ExpiryDate: "",
+            AdmissionDate: "8/15/2025 12:00:00 AM"
+        },
+        {
+            ItemCode: "O4310642619",
+            Warehouse: "01",
+            Serial: "5489009",
+            ManufacturingDate: "",
+            ExpiryDate: "",
+            AdmissionDate: "8/15/2025 12:00:00 AM"
+        },
+        {
+            ItemCode: "O4310642619",
+            Warehouse: "01",
+            Serial: "5678027",
+            ManufacturingDate: "",
+            ExpiryDate: "",
+            AdmissionDate: "8/15/2025 12:00:00 AM"
+        }
+    ]);
+      setShowSerialModal(true);
+    } catch (error) {
+      ErrorPrinter(error);
+    }
+  }
 
   useEffect(() => {
     getPickListQtyDetail();
@@ -324,7 +447,6 @@ const validatePicking = async (DetailNo) => {
 
   const handleScanResult = (success) => {
     setShowModal(false);
-    console.log("Scan result:", success);
     setIsVerified(success);
   };
 
@@ -353,14 +475,39 @@ const validatePicking = async (DetailNo) => {
     setSelectedBatch(null);
   };
 
+  const handleAddSerial = () => {
+    if (!selectedSerial) {
+      message.error("Please select a serial before adding.");
+      return;
+    }
+    if (batchSerialData.some((item) => item.Serial === selectedSerial.Serial)) {
+      message.error("Serial already added.");
+      return;
+    }
+
+    updatePickListSerial(DONo, id);
+    setSelectedSerial(null)
+  }
+
   return showBatchModal ? (
-    <BatchModal
+    <BatchSerialModal
       visible={showBatchModal}
       onClose={() => setShowBatchModal(false)}
-      batchList={batchList}
+      list={batchList}
       onRefresh={getPickListBatch}
       item={data[0]}
-      setSelectedBatch={setSelectedBatch}
+      setSelected={setSelectedBatch}
+      isBatch={true}
+    />
+  ) : showSerialModal ? (
+    <BatchSerialModal 
+      visible={showSerialModal}
+      onClose={() => setShowSerialModal(false)}
+      list={serialList}
+      onRefresh={getPickListSerial}
+      item={data[0]}
+      setSelected={setSelectedSerial}
+      isBatch={false}
     />
   ) : (
     <MobilePageShell
@@ -593,6 +740,67 @@ const validatePicking = async (DetailNo) => {
                 </div>
               </>
             )}
+            {data[0].TrackedBySerial && (
+              <>
+                <Row
+                  gutter={8}
+                  style={{
+                    width: "100%",
+                    display: "flex",
+                    alignItems: "between",
+                  }}
+                >
+                  <Col flex="100%">
+                    <Button
+                      type="primary"
+                      onClick={() => getPickListSerial(
+                          data[0].OrderedProdCode,
+                          data[0].Warehouse,
+                          data[0].UOM
+                        )
+                      }
+                      disabled={!isVerified}
+                      style={{
+                        backgroundColor: "#377188",
+                        width: "100%",
+                        borderRadius: 50,
+                      }}
+                    >
+                      {selectedSerial ? selectedSerial.Serial : "Select Serial"}
+                    </Button>
+                  </Col>
+                  {selectedSerial && (
+                    <Card style={{ marginTop: 16, backgroundColor: "white", width:'100vw' }}>
+                      <div style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                      }}>
+                        <div style={{ fontSize: 14, fontWeight: 600, color: "#888" }}>Serial: {selectedSerial.Serial}</div>
+                        <div style={{ color: "#377188", fontWeight: 600, fontSize: 16 }}>Qty: {1}</div>
+                        <Button
+                          type="text"
+                          icon={<DeleteOutlined style={{ color: "red" }} />}
+                          onClick={() => setSelectedSerial(null)}
+                        />
+                      </div>
+                    </Card>
+                  )}
+                </Row>
+                {selectedSerial && (
+                  <Row>
+                    <Button
+                      type="primary"
+                      block
+                      onClick={() => handleAddSerial()}
+                      style={{ backgroundColor: "#377188", bottom: '20px', position:'absolute', width:'100vw' }}
+                    >
+                      Post to LMS
+                    </Button>
+                  </Row>
+                )}
+              </>
+            )}
             {/* Default non batch non serial. */}
             {!data[0].TrackedByBatch && !data[0].TrackedBySerial && (
               <>
@@ -699,23 +907,24 @@ const ScanModal = ({ visible, onClose, possibleProdCodes }) => {
   );
 };
 
-const BatchModal = ({
+const BatchSerialModal = ({
   visible,
   onClose,
-  batchList = [],
+  list = [],
   onRefresh,
   item,
-  setSelectedBatch,
+  setSelected,
+  isBatch = true
 }) => {
-  const handleSelectBatch = (batch) => {
-    setSelectedBatch(batch);
+  const handleSelect = (detail) => {
+    setSelected(detail);
     onClose();
   };
 
   return (
     visible && (
       <MobilePageShell
-        title={"Batch Nos"}
+        title={isBatch ? "Batch Nos" : "Serials"}
         onBack={onClose}
         onRefresh={() =>
           onRefresh(item.OrderedProdCode, item.Warehouse, item.UOM)
@@ -743,11 +952,11 @@ const BatchModal = ({
           </div>
         </Card>
 
-        {batchList.map((batch, index) => (
+        {list.map((detail, index) => (
           <Card
             key={index}
             style={{ marginBottom: 16 }}
-            onClick={() => handleSelectBatch(batch)}
+            onClick={() => handleSelect(detail)}
           >
             <div
               style={{
@@ -757,31 +966,33 @@ const BatchModal = ({
               }}
             >
               <span style={{ color: "#377188", fontWeight: 600, fontSize: 16 }}>
-                Batch No: {batch.BatchNo}
+                {isBatch ? `Batch No: ${detail.BatchNo}` : `Serial: ${detail.Serial}`}
               </span>
-              <span style={{ fontWeight: 500 }}>
-                Qty: {parseFloat(batch.Qty)} {item.UOM}
-              </span>
+              {isBatch && (
+                <span style={{ fontWeight: 500 }}>
+                  Qty: {parseFloat(detail.Qty)} {detail.UOM}
+                </span>)
+              }
             </div>
 
             <div style={{ backgroundColor: "#fefefe" }}>
               <div style={{ fontSize: 13, color: "#444", lineHeight: 1.6 }}>
                 <div>
                   <strong>Manufacturing Date:</strong>{" "}
-                  {batch.ManufacturingDate
-                    ? dayjs(batch.ManufacturingDate).format("DD/MM/YYYY")
+                  {detail.ManufacturingDate
+                    ? dayjs(detail.ManufacturingDate).format("DD/MM/YYYY")
                     : "-"}
                 </div>
                 <div>
                   <strong>Expiration Date:</strong>{" "}
-                  {batch.ExpirationDate
-                    ? dayjs(batch.ExpirationDate).format("DD/MM/YYYY")
+                  {detail.ExpirationDate
+                    ? dayjs(detail.ExpirationDate).format("DD/MM/YYYY")
                     : "-"}
                 </div>
                 <div>
                   <strong>Admission Date:</strong>{" "}
-                  {batch.AdmissionDate
-                    ? dayjs(batch.AdmissionDate).format("DD/MM/YYYY")
+                  {detail.AdmissionDate
+                    ? dayjs(detail.AdmissionDate).format("DD/MM/YYYY")
                     : "-"}
                 </div>
               </div>
