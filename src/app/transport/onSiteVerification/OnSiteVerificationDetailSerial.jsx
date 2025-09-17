@@ -6,6 +6,7 @@ import {
   playErrorSound,
   playSound,
   ScanListener,
+  SpinLoading,
 } from "../../../constants/Common";
 import { APIHelper } from "../../../constants/APIHelper";
 import { Select, Table,Card,Space,Typography,message } from "antd";
@@ -162,6 +163,7 @@ export const OnSiteVerificationDetailSerial = () => {
   onRefresh={getOnSiteScheduleIDVerification}
 >
   <div style={{ padding: '16px' }}>
+    <SpinLoading />
     <Card
       style={{ marginBottom: 24 }}
       bodyStyle={{ padding: '16px' }}
