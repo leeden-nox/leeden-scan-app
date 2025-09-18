@@ -9,13 +9,14 @@ import {
   SpinLoading,
 } from "../../../constants/Common";
 import { APIHelper } from "../../../constants/APIHelper";
-import { Select, Table,Card,Space,Typography,message } from "antd";
+import { Select, Table, Card, Space, Typography, message } from "antd";
 import MobilePageShell from "../../../constants/MobilePageShell";
 import { CheckOutlined, CloseOutlined } from "@ant-design/icons";
+import UnauthorizedPage from "../../../constants/Unauthorized";
 const { Title } = Typography;
 export const OnSiteVerificationDetailSerial = () => {
   const history = useHistory();
-  const [authorized, setAuthorized] = useState(null);
+  const [authorized, setAuthorized] = useState(true);
   const [data, setData] = useState([]);
   const { id, doNo } = useParams();
   const [isIssuedVerifiedList, setIsIssuedVerifiedList] = useState([]);
@@ -67,10 +68,6 @@ export const OnSiteVerificationDetailSerial = () => {
   useEffect(() => {
     fetchParamData(true);
   }, []);
-  //   useEffect(async () => {
-  //     let isSending = true;
-  //     fetchParamData(isSending);
-  //   }, []);
   useEffect(() => {
     if (isIssuedVerified.id !== undefined) {
       getOnSiteScheduleIDVerification();
@@ -94,19 +91,11 @@ export const OnSiteVerificationDetailSerial = () => {
       );
 
       if (responseParam.status === 200) {
-        // sendNotification({
-        //   type: "success",
-        //   message: "Serial :" + event.SerialNo + " updated successfully",
-        // });
         message.success("Serial :" + barcode + " updated successfully");
         await getOnSiteScheduleIDVerification();
         playSound();
         return true;
       } else {
-        // sendNotification({
-        //   type: "error",
-        //   message: "Serial :" + event.SerialNo + " updated failed",
-        // });
         message.error("Serial :" + barcode + " updated failed");
         playErrorSound();
         return false;
@@ -156,57 +145,75 @@ export const OnSiteVerificationDetailSerial = () => {
     },
   ];
 
-  return (
-<MobilePageShell
-  title="On Site Verification"
-  onBack={confirmLeave}
-  onRefresh={getOnSiteScheduleIDVerification}
->
-  <div style={{ padding: '16px' }}>
-    <SpinLoading />
-    <Card
-      style={{ marginBottom: 24 }}
-      bodyStyle={{ padding: '16px' }}
-      bordered={false}
-    >
-      <Space direction="vertical" style={{ width: '100%' }}>
-        <Title level={5} style={{ marginBottom: 8 }}>
-          Filter by Verification Status
-        </Title>
-        <Select
-          placeholder="Select status"
-          style={{ width: '100%' }}
-          value={isIssuedVerified?.id}
-          onChange={(id) => {
-            const selected = isIssuedVerifiedList.find((item) => item.id === id);
-            setIsIssuedVerified(selected);
-          }}
-        >
-          {isIssuedVerifiedList.map(({ id, text }) => (
-            <Select.Option key={id} value={id}>
-              {text}
-            </Select.Option>
-          ))}
-        </Select>
-      </Space>
-    </Card>
+  if (!authorized) {
+    return (
+      <MobilePageShell
+        title={"On Site Verification"}
+        onBack={() => history.push("/")}
+        onRefresh={initial}
+      >
+        <UnauthorizedPage
+          title={"View On Site Verification Detail (4.8.1, 1)"}
+          subTitle={"Sorry, you are not authorized to access this page."}
+        />
+      </MobilePageShell>
+    );
+  } else {
+    return (
+      <MobilePageShell
+        title="On Site Verification"
+        onBack={confirmLeave}
+        onRefresh={getOnSiteScheduleIDVerification}
+      >
+        <div style={{ padding: "16px" }}>
+          <SpinLoading />
+          <Card
+            style={{ marginBottom: 24 }}
+            styles={{ padding: "16px" }}
+            variant="outlined" 
 
-    <Card
-      title="Serial Verification List"
-      bordered={false}
-      bodyStyle={{ padding: '16px' }}
-    >
-      <Table
-        columns={columns}
-        dataSource={data}
-        rowKey="SerialNo"
-        pagination={false}
-        size="middle"
-      />
-    </Card>
+          >
+            <Space direction="vertical" style={{ width: "100%" }}>
+              <Title level={5} style={{ marginBottom: 8 }}>
+                Filter by Verification Status
+              </Title>
+              <Select
+                placeholder="Select status"
+                style={{ width: "100%" }}
+                value={isIssuedVerified?.id}
+                onChange={(id) => {
+                  const selected = isIssuedVerifiedList.find(
+                    (item) => item.id === id
+                  );
+                  setIsIssuedVerified(selected);
+                }}
+              >
+                {isIssuedVerifiedList.map(({ id, text }) => (
+                  <Select.Option key={id} value={id}>
+                    {text}
+                  </Select.Option>
+                ))}
+              </Select>
+            </Space>
+          </Card>
 
-  </div>
-  <ScanListener onScanDetected={(barcode) => handleSubmit(barcode)}/>
-</MobilePageShell>
-  );
+          <Card
+            title="Serial Verification List"
+            variant="outlined" 
+
+            styles={{ padding: "16px" }}
+          >
+            <Table
+              columns={columns}
+              dataSource={data}
+              rowKey="SerialNo"
+              pagination={false}
+              size="middle"
+            />
+          </Card>
+        </div>
+        <ScanListener onScanDetected={(barcode) => handleSubmit(barcode)} />
+      </MobilePageShell>
+    );
+  }
 };

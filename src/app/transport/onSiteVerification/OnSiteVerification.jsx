@@ -53,7 +53,7 @@ export const OnSiteVerification = () => {
                 borderRadius: "8px",
                 background: "#f5f5f5",
               }}
-              bordered={false}
+              variant="outlined"
             >
               <div
                 style={{
@@ -124,6 +124,7 @@ export const OnSiteVerification = () => {
             <Table
               dataSource={data}
               columns={columns}
+              rowKey={(record) => record.ScheduleID}
               pagination={{
                 current: currentPage,
                 pageSize: pageSize,

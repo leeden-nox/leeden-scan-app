@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
-import { Button, Table, Card, message, Tag,Row,Col,Space } from "antd";
+import {  Table, Card, message, Row, Col, Space } from "antd";
 import { useHistory, useParams } from "react-router-dom";
 import moment from "moment";
-import dayjs from "dayjs";
 import {
   AxiosWithLoading,
   ErrorPrinter,
@@ -16,12 +15,14 @@ import { RightOutlined } from "@ant-design/icons";
 import { PathLink } from "../../../constants/PathLink";
 import { playSound } from "../../../constants/Common";
 import { ScanListener } from "../../../constants/Common";
+import UnauthorizedPage from "../../../constants/Unauthorized";
 
-export const onSiteVerificationDetail = () => {
+export const OnSiteVerificationDetail = () => {
   const [data, setData] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const history = useHistory();
+  const [authorized, setAuthorized] = useState(true);
   const scheduleID = useParams().id.split("?")[0];
   const initial = async () => {
     try {
@@ -35,19 +36,18 @@ export const onSiteVerificationDetail = () => {
         APIHelper.postConfig("/logistics/getOnSiteScheduleIDVerification", body)
       );
       setData(responseParam.data.records);
+      setAuthorized(true);
     } catch (error) {
       ErrorPrinter(error);
+      setAuthorized(false);
     }
   };
 
   const handleDetailClicked = (DONo) => {
-    // eslint-disable-next-line no-restricted-globals
-    history.push(
-      PathLink.onSiteVerification + "/" + scheduleID + "/" + DONo
-    );
+    history.push(PathLink.onSiteVerification + "/" + scheduleID + "/" + DONo);
   };
 
-   const handleSubmit = async (barcode) => { 
+  const handleSubmit = async (barcode) => {
     try {
       let body = {
         Module: "Logistics",
@@ -65,74 +65,79 @@ export const onSiteVerificationDetail = () => {
       );
 
       if (responseParam.status === 200) {
-        // sendNotification({
-        //   type: "success",
-        //   message: "Serial :" + barcode + " updated successfully",
-        // });
         message.success("Serial :" + barcode + " updated successfully");
         await initial();
         playSound();
         return true;
       } else {
-      message.error("Serial :" + barcode + " updated failed");
-        
+        message.error("Serial :" + barcode + " updated failed");
+
         return false;
       }
     } catch (error) {
-      //console.log(error)
-    //ErrorPrinter(error, history);
       playErrorSound();
       message.error("Serial :" + barcode + " updated failed");
       return false;
     }
   };
 
-const columns = [
-  {
-    title: "DO",
-    dataIndex: "DONo",
-    key: "delivery",
-    render: (_, record) => <DeliveryCard record={record} onClick={handleDetailClicked} />,
-  },
-];
+  const columns = [
+    {
+      title: "DO",
+      dataIndex: "DONo",
+      render: (_, record) => (
+        <DeliveryCard record={record} onClick={handleDetailClicked}/>
+      ),
+    },
+  ];
   const confirmLeave = () => {
     history.goBack();
   };
   useEffect(() => {
     initial();
   }, [currentPage, pageSize]);
-
-  return (
-    <MobilePageShell
-      title={"On Site Verification"}
-      onBack={confirmLeave}
-      onRefresh={() => initial()}
-    >
-      <>
-        <SpinLoading />
-        <Table
-          dataSource={data}
-          columns={columns}
-          pagination={{
-            current: currentPage,
-            pageSize: pageSize,
-            showSizeChanger: true,
-            onChange: (page, newPageSize) => {
-              setCurrentPage(page);
-              setPageSize(newPageSize);
-            },
-          }}
+  if (!authorized) {
+    return (
+      <MobilePageShell
+        title={"On Site Verification"}
+        onBack={() => history.push("/")}
+        onRefresh={initial}
+      >
+        <UnauthorizedPage
+          title={"View On Site Verification Detail (4.8.1, 1)"}
+          subTitle={"Sorry, you are not authorized to access this page."}
         />
-      </>
-            <ScanListener
-              onScanDetected={(barcode) => handleSubmit(barcode)}
-            />
-    </MobilePageShell>
-  );
+      </MobilePageShell>
+    );
+  } else {
+    return (
+      <MobilePageShell
+        title={"On Site Verification"}
+        onBack={confirmLeave}
+        onRefresh={() => initial()}
+      >
+        <>
+          <SpinLoading />
+          <Table
+          rowKey={(record) => record.DONo}
+            dataSource={data}
+            columns={columns}
+            pagination={{
+              current: currentPage,
+              pageSize: pageSize,
+              showSizeChanger: true,
+              onChange: (page, newPageSize) => {
+                setCurrentPage(page);
+                setPageSize(newPageSize);
+              },
+            }}
+          />
+        </>
+        <ScanListener onScanDetected={(barcode) => handleSubmit(barcode)} />
+      </MobilePageShell>
+    );
+  }
 };
-
-
-
 
 const { Title, Text } = Typography;
 
@@ -157,8 +162,10 @@ const DeliveryCard = ({ record, onClick }) => {
     <Card
       hoverable
       onClick={() => onClick(DONo)}
-      bordered={false}
-      bodyStyle={{ padding: "1rem", backgroundColor: "#fdfdfd" }}
+      variant="outlined" 
+
+      styles={{ body: { padding: "1rem", backgroundColor: "#fdfdfd" } }}
+
       style={{
         boxShadow: "0 1px 4px rgba(31, 38, 135, 0.1)",
         borderRadius: 8,
@@ -173,7 +180,9 @@ const DeliveryCard = ({ record, onClick }) => {
               {DONo}
             </Title>
             <Text style={{ color: "#5d6168" }}>{formattedDate}</Text>
-            <Text italic style={{ color: "#5d6168" }}>{AccountName}</Text>
+            <Text italic style={{ color: "#5d6168" }}>
+              {AccountName}
+            </Text>
             <Text style={{ whiteSpace: "pre-line", color: "#c7c7c7" }}>
               {DeliveryAddressText}
             </Text>
@@ -193,13 +202,20 @@ const DeliveryCard = ({ record, onClick }) => {
             {!IsCOPSerial ? (
               <>
                 <Text italic style={{ color: "#edc6c4" }}>
-                  CYL: <span style={{ color: "#c37f7f" }}>{TotalUnverifiedCyl}</span>
+                  CYL:{" "}
+                  <span style={{ color: "#c37f7f" }}>{TotalUnverifiedCyl}</span>
                 </Text>
                 <Text italic style={{ color: "#edc6c4" }}>
-                  M-Rack: <span style={{ color: "#c37f7f" }}>{TotalUnverifiedRack}</span>
+                  M-Rack:{" "}
+                  <span style={{ color: "#c37f7f" }}>
+                    {TotalUnverifiedRack}
+                  </span>
                 </Text>
                 <Text italic style={{ color: "#edc6c4" }}>
-                  T-Rack: <span style={{ color: "#c37f7f" }}>{TotalUnverifiedTransportRack}</span>
+                  T-Rack:{" "}
+                  <span style={{ color: "#c37f7f" }}>
+                    {TotalUnverifiedTransportRack}
+                  </span>
                 </Text>
               </>
             ) : (
@@ -207,14 +223,12 @@ const DeliveryCard = ({ record, onClick }) => {
                 <span style={{ color: "#c37f7f" }}>COP Serial</span>
               </Text>
             )}
-
-            
           </Space>
         </Col>
-        <Col flex="0 0 10px"> 
-            <Space direction="vertical" size={6} align="center">
-                <RightOutlined style={{ fontSize: "1em", color: "#c37f7f" }} />
-            </Space>
+        <Col flex="0 0 10px">
+          <Space direction="vertical" size={6} align="center">
+            <RightOutlined style={{ fontSize: "1em", color: "#c37f7f" }} />
+          </Space>
         </Col>
       </Row>
     </Card>
