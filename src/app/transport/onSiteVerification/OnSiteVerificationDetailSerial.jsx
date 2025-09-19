@@ -63,6 +63,7 @@ export const OnSiteVerificationDetailSerial = () => {
   };
 
   const fetchParamData = useCallback(async (isSending) => {
+    setIsLoading(true)
     try {
       let body = {
         Module: "Logistics",
@@ -80,6 +81,9 @@ export const OnSiteVerificationDetailSerial = () => {
     } catch (error) {
       let data = ErrorPrinter(error, history);
       setAuthorized(data.authorized);
+    }
+        finally{
+        setIsLoading(false);
     }
   }, []);
   const confirmLeave = () => {
