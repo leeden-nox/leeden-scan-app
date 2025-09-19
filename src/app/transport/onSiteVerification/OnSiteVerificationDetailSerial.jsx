@@ -82,9 +82,6 @@ export const OnSiteVerificationDetailSerial = () => {
       let data = ErrorPrinter(error, history);
       setAuthorized(data.authorized);
     }
-        finally{
-        setIsLoading(false);
-    }
   }, []);
   const confirmLeave = () => {
     history.goBack();
