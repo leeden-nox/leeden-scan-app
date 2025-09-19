@@ -1,5 +1,5 @@
 import { useEffect, useState,useRef } from "react";
-import {  Table, Card, message, Row, Col, Space,Button,Modal,Input,Tag } from "antd";
+import {  Table, Card, message, Row, Col, Space,Button,Modal,Input,Tag,Progress } from "antd";
 import { useHistory, useParams } from "react-router-dom";
 import moment from "moment";
 import {
@@ -10,7 +10,6 @@ import {
 import { APIHelper } from "../../../constants/APIHelper";
 import MobilePageShell from "../../../constants/MobilePageShell";
 import { Typography, Divider } from "antd";
-import { RightOutlined } from "@ant-design/icons";
 import { PathLink } from "../../../constants/PathLink";
 import UnauthorizedPage from "../../../constants/Unauthorized";
 import { EditOutlined, KeyOutlined } from "@ant-design/icons";
@@ -131,7 +130,8 @@ const DeliveryCard = ({ record, onClick }) => {
     TotalUnverifiedRack,
     TotalUnverifiedTransportRack,
     IsCOPSerial,
-    DOStatusName, // new status field
+    DOStatusName,
+    TotalSerial,
   } = record;
 
   const formattedDate = RequiredDate
@@ -139,12 +139,16 @@ const DeliveryCard = ({ record, onClick }) => {
     : "";
 
   const statusColorMap = {
-    scheduled: "blue",
-    delivered: "green",
-    invoice: "gold",
+    pending: "blue",
+    completed: "green",
   };
 
   const statusColor = statusColorMap[DOStatusName?.toLowerCase()] || "default";
+
+  const verifiedCount = TotalSerial - TotalUnverifiedSerial;
+  const percentVerified = TotalSerial > 0
+    ? Math.round((verifiedCount / TotalSerial) * 100)
+    : 0;
 
   return (
     <Card
@@ -158,28 +162,24 @@ const DeliveryCard = ({ record, onClick }) => {
         cursor: "pointer",
       }}
     >
-      <Row align="middle" justify="space-between">
-        {/* Left: DO Info */}
-        <Col flex="1">
+      <Row gutter={[16, 16]}>
+        {/* Left Section */}
+        <Col span={16}>
           <Space direction="vertical" size={4}>
             <Title level={5} style={{ marginBottom: 0, color: "#5d6168" }}>
               {DONo}
             </Title>
-            <Tag color={statusColor} style={{ marginBottom: 4 }}>
-              {DOStatusName}
-            </Tag>
+            <Tag color={statusColor}>{DOStatusName}</Tag>
             <Text style={{ color: "#5d6168" }}>{formattedDate}</Text>
-            <Text italic style={{ color: "#5d6168" }}>
-              {AccountName}
-            </Text>
+            <Text italic style={{ color: "#5d6168" }}>{AccountName}</Text>
             <Text style={{ whiteSpace: "pre-line", color: "#c7c7c7" }}>
               {DeliveryAddressText}
             </Text>
           </Space>
         </Col>
 
-        {/* Right: Verification Block */}
-        <Col flex="0 0 120px" style={{ textAlign: "center" }}>
+        {/* Right Section */}
+        <Col span={8} style={{ textAlign: "center" }}>
           <Space direction="vertical" size={6} align="center">
             <Text strong style={{ color: "#c37f7f", fontSize: "1.6em" }}>
               {TotalUnverifiedSerial}
@@ -207,18 +207,26 @@ const DeliveryCard = ({ record, onClick }) => {
             )}
           </Space>
         </Col>
-
-        {/* Arrow */}
-        <Col flex="0 0 10px">
-          <Space direction="vertical" size={6} align="center">
-            <RightOutlined style={{ fontSize: "1em", color: "#c37f7f" }} />
-          </Space>
-        </Col>
       </Row>
+
+      {/* Progress Bar Section */}
+      <div style={{ marginTop: 16 }}>
+        <Text style={{ color: "#595959" }}>
+          Verification Progress:{" "}
+          <strong>{verifiedCount} / {TotalSerial} serials verified</strong>
+        </Text>
+        <Progress
+          percent={percentVerified}
+          status={percentVerified === 100 ? "success" : "active"}
+          strokeColor="#52c41a"
+          trailColor="#d9d9d9"
+          showInfo={false}
+          style={{ marginTop: 8 }}
+        />
+      </div>
     </Card>
   );
 };
-
 
 
 const SerialNoEntryModal = ({ showModal, setShowModal, onSearch }) => {

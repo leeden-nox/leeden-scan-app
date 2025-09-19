@@ -9,12 +9,12 @@ import {
   SpinLoading,
 } from "../../../constants/Common";
 import { APIHelper } from "../../../constants/APIHelper";
-import { Select, Table, Card, Space, Typography, message,Button,Modal,Input } from "antd";
+import { Select, Table, Card, Space, Typography, message,Button,Modal,Input,Progress } from "antd";
 import MobilePageShell from "../../../constants/MobilePageShell";
 import { CheckOutlined, CloseOutlined } from "@ant-design/icons";
 import UnauthorizedPage from "../../../constants/Unauthorized";
 import { EditOutlined, KeyOutlined } from "@ant-design/icons";
-const { Title } = Typography;
+const { Title,Text } = Typography;
 export const OnSiteVerificationDetailSerial = () => {
     const [showModal, setShowModal] = useState(false);
   const history = useHistory();
@@ -23,6 +23,7 @@ export const OnSiteVerificationDetailSerial = () => {
   const { id, doNo } = useParams();
   const [isIssuedVerifiedList, setIsIssuedVerifiedList] = useState([]);
   const [isIssuedVerified, setIsIssuedVerified] = useState({});
+  const [totalRecords, setTotalRecords] = useState({});
 
   const getOnSiteScheduleIDVerification = async () => {
     try {
@@ -38,7 +39,10 @@ export const OnSiteVerificationDetailSerial = () => {
           body
         )
       );
-      setData(responseParam.data.records);
+      
+      setData(responseParam.data.Records.records);
+      setTotalRecords(responseParam.data.TotalRecords.records[0]);
+
     } catch (error) {
       ErrorPrinter(error, history);
     }
@@ -182,35 +186,61 @@ export const OnSiteVerificationDetailSerial = () => {
           onSearch={(serial) => handleSubmit(serial)}
         />
           <SpinLoading />
-          <Card
-            style={{ marginBottom: 24 }}
-            styles={{ padding: "16px" }}
-            variant="outlined" 
+<Card
+  style={{ marginBottom: 24 }}
+  styles={{ padding: "16px" }}
+  variant="outlined"
+>
+  <Space direction="vertical" style={{ width: "100%" }}>
+    {/* Progress Bar Section */}
+    <div>
+      <Text style={{ color: "#595959" }}>
+        Verification Progress:{" "}
+        <strong>
+          {totalRecords.TotalVerified} / {totalRecords.TotalSerial} verified
+        </strong>
+      </Text>
+      <Progress
+        percent={
+          totalRecords.TotalSerial > 0
+            ? Math.round(
+                (totalRecords.TotalVerified / totalRecords.TotalSerial) * 100
+              )
+            : 0
+        }
+        status={
+          totalRecords.TotalVerified === totalRecords.TotalSerial
+            ? "success"
+            : "active"
+        }
+        strokeColor="#52c41a"
+        trailColor="#d9d9d9"
+        showInfo={false}
+        style={{ marginTop: 8 }}
+      />
+    </div>
 
-          >
-            <Space direction="vertical" style={{ width: "100%" }}>
-              <Title level={5} style={{ marginBottom: 8 }}>
-                Filter by Verification Status
-              </Title>
-              <Select
-                placeholder="Select status"
-                style={{ width: "100%" }}
-                value={isIssuedVerified?.id}
-                onChange={(id) => {
-                  const selected = isIssuedVerifiedList.find(
-                    (item) => item.id === id
-                  );
-                  setIsIssuedVerified(selected);
-                }}
-              >
-                {isIssuedVerifiedList.map(({ id, text }) => (
-                  <Select.Option key={id} value={id}>
-                    {text}
-                  </Select.Option>
-                ))}
-              </Select>
-            </Space>
-          </Card>
+    {/* Dropdown Section */}
+    <Title level={5} style={{ marginBottom: 8 }}>
+      Filter by Verification Status
+    </Title>
+    <Select
+      placeholder="Select status"
+      style={{ width: "100%" }}
+      value={isIssuedVerified?.id}
+      onChange={(id) => {
+        const selected = isIssuedVerifiedList.find((item) => item.id === id);
+        setIsIssuedVerified(selected);
+      }}
+    >
+      {isIssuedVerifiedList.map(({ id, text }) => (
+        <Select.Option key={id} value={id}>
+          {text}
+        </Select.Option>
+      ))}
+    </Select>
+  </Space>
+</Card>
 
           <Card
             title="Serial Verification List"

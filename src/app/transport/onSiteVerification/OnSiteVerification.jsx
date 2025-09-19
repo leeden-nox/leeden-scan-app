@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Button, Table, Card, Modal } from "antd";
+import { Button, Table, Card, Modal,Progress,Typography } from "antd";
 import { Route, useHistory, Switch } from "react-router-dom";
 import moment from "moment";
 import { AxiosWithLoading, ErrorPrinter, SpinLoading } from "../../../constants/Common";
@@ -7,7 +7,7 @@ import { APIHelper } from "../../../constants/APIHelper";
 import { PathLink } from "../../../constants/PathLink";
 import UnauthorizedPage from "../../../constants/Unauthorized";
 import MobilePageShell from "../../../constants/MobilePageShell";
-
+const {  Text } = Typography;
 export const OnSiteVerification = () => {
   const [data, setData] = useState([]);
   const [authorized, setAuthorized] = useState(true);
@@ -64,20 +64,39 @@ export const OnSiteVerification = () => {
               >
                 Schedule ID: {record.ScheduleID}
               </div>
+            
               <div style={{ color: "#595959" }}>
                 Vehicle No: {record.VehicleNo}
               </div>
+            
               <div style={{ color: "#595959" }}>
                 Tanker No: {record.TankerNo}
               </div>
-              <div style={{ color: "#595959" }}>
-                Pending DO:{" "}
-                <span style={{ color: "#52c41a" }}>{record.PendingDO}</span>
+            
+              {/* DO Progress Section */}
+              <div style={{ marginTop: "12px" }}>
+                <Text style={{ color: "#595959" }}>
+                  Delivery Progress:{" "}
+                  <strong>
+                    {record.TotalDO - record.PendingDO} / {record.TotalDO} DOs Delivered
+                  </strong>
+                </Text>
+                <Progress
+                  percent={Math.round(
+                    ((record.TotalDO - record.PendingDO) / record.TotalDO) * 100
+                  )}
+                  status={record.PendingDO === 0 ? "success" : "active"}
+                  strokeColor="#52c41a"
+                  trailColor="#d9d9d9"
+                  showInfo={false}
+                  style={{ marginTop: 8 }}
+                />
               </div>
-              <div style={{ color: "#8c8c8c" }}>
-                Schedule Date:{" "}
-                {moment(record.ScheduleDate).format("YYYY-MM-DD")}
+            
+              <div style={{ color: "#8c8c8c", marginTop: "12px" }}>
+                Schedule Date: {moment(record.ScheduleDate).format("YYYY-MM-DD")}
               </div>
+            
               <div style={{ marginTop: "12px", textAlign: "left" }}>
                 <Button
                   type="primary"

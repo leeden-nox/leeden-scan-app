@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Button, Table, Card, Modal } from "antd";
+import { Button, Table, Card, Modal,Progress,Typography } from "antd";
 import { Route, useHistory, Switch } from "react-router-dom";
 import moment from "moment";
 import { AxiosWithLoading, ErrorPrinter, SpinLoading } from "../../../constants/Common";
@@ -8,6 +8,7 @@ import { PathLink } from "../../../constants/PathLink";
 import UnauthorizedPage from "../../../constants/Unauthorized";
 import MobilePageShell from "../../../constants/MobilePageShell";
 
+const {  Text } = Typography;
 export const CustSiteVerification = () => {
   const [data, setData] = useState([]);
   const [authorized, setAuthorized] = useState(true);
@@ -46,48 +47,67 @@ export const CustSiteVerification = () => {
       render: (_, record) => {
         return (
           <>
-            <Card
-              key={record.ScheduleID}
-              style={{
-                marginBottom: "16px",
-                borderRadius: "8px",
-                background: "#f5f5f5",
-              }}
-              variant="outlined"
-            >
-              <div
-                style={{
-                  fontSize: "16px",
-                  fontWeight: "bold",
-                  color: "#377188",
-                }}
-              >
-                Schedule ID: {record.ScheduleID}
-              </div>
-              <div style={{ color: "#595959" }}>
-                Vehicle No: {record.VehicleNo}
-              </div>
-              <div style={{ color: "#595959" }}>
-                Tanker No: {record.TankerNo}
-              </div>
-              <div style={{ color: "#595959" }}>
-                Pending DO:{" "}
-                <span style={{ color: "#52c41a" }}>{record.PendingDO}</span>
-              </div>
-              <div style={{ color: "#8c8c8c" }}>
-                Schedule Date:{" "}
-                {moment(record.ScheduleDate).format("YYYY-MM-DD")}
-              </div>
-              <div style={{ marginTop: "12px", textAlign: "left" }}>
-                <Button
-                  type="primary"
-                  onClick={() => goToDetail(record.ScheduleID)}
-                  style={{ backgroundColor: "#377188", borderColor: "#377188" }}
-                >
-                  Detail
-                </Button>
-              </div>
-            </Card>
+<Card
+  key={record.ScheduleID}
+  style={{
+    marginBottom: "16px",
+    borderRadius: "8px",
+    background: "#f5f5f5",
+  }}
+  variant="outlined"
+>
+  <div
+    style={{
+      fontSize: "16px",
+      fontWeight: "bold",
+      color: "#377188",
+    }}
+  >
+    Schedule ID: {record.ScheduleID}
+  </div>
+
+  <div style={{ color: "#595959" }}>
+    Vehicle No: {record.VehicleNo}
+  </div>
+
+  <div style={{ color: "#595959" }}>
+    Tanker No: {record.TankerNo}
+  </div>
+
+  {/* DO Progress Section */}
+  <div style={{ marginTop: "12px" }}>
+    <Text style={{ color: "#595959" }}>
+      Delivery Progress:{" "}
+      <strong>
+        {record.TotalDO - record.PendingDO} / {record.TotalDO} DOs Delivered
+      </strong>
+    </Text>
+    <Progress
+      percent={Math.round(
+        ((record.TotalDO - record.PendingDO) / record.TotalDO) * 100
+      )}
+      status={record.PendingDO === 0 ? "success" : "active"}
+      strokeColor="#52c41a"
+      trailColor="#d9d9d9"
+      showInfo={false}
+      style={{ marginTop: 8 }}
+    />
+  </div>
+
+  <div style={{ color: "#8c8c8c", marginTop: "12px" }}>
+    Schedule Date: {moment(record.ScheduleDate).format("YYYY-MM-DD")}
+  </div>
+
+  <div style={{ marginTop: "12px", textAlign: "left" }}>
+    <Button
+      type="primary"
+      onClick={() => goToDetail(record.ScheduleID)}
+      style={{ backgroundColor: "#377188", borderColor: "#377188" }}
+    >
+      Detail
+    </Button>
+  </div>
+</Card>
           </>
         );
       },

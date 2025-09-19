@@ -19,12 +19,18 @@ import {
   Button,
   Modal,
   Input,
+  Tag,
+  Progress
 } from "antd";
 import MobilePageShell from "../../../constants/MobilePageShell";
 import { CheckOutlined, CloseOutlined } from "@ant-design/icons";
 import UnauthorizedPage from "../../../constants/Unauthorized";
-import { EditOutlined, KeyOutlined,CheckCircleOutlined } from "@ant-design/icons";
-const { Title } = Typography;
+import {
+  EditOutlined,
+  KeyOutlined,
+  CheckCircleOutlined,
+} from "@ant-design/icons";
+const { Title, Text } = Typography;
 import dayjs from "dayjs";
 export const CustSiteVerificationDetailSerial = () => {
   const [showModal, setShowModal] = useState(false);
@@ -34,7 +40,8 @@ export const CustSiteVerificationDetailSerial = () => {
   const { id, doNo } = useParams();
   const [isIssuedVerifiedList, setIsIssuedVerifiedList] = useState([]);
   const [isIssuedVerified, setIsIssuedVerified] = useState({});
-  const [DOData, setDOData] = useState({});
+  const [DOData, setDOData] = useState(null);
+    const [totalRecords, setTotalRecords] = useState({});
   const getOnSiteScheduleIDVerification = async () => {
     getDOData();
     try {
@@ -50,7 +57,8 @@ export const CustSiteVerificationDetailSerial = () => {
           body
         )
       );
-      setData(responseParam.data.records);
+        setData(responseParam.data.Records.records);
+      setTotalRecords(responseParam.data.TotalRecords.records[0]);
     } catch (error) {
       ErrorPrinter(error, history);
     }
@@ -67,6 +75,8 @@ export const CustSiteVerificationDetailSerial = () => {
         APIHelper.postConfig("/logistics/getDeliveryOrderByDONo", body)
       );
       setDOData(responseParam.data.records[0]);
+      //DelieveredDate is NULL means that not yet delivered
+      console.log(responseParam.data.records[0]);
     } catch (error) {
       ErrorPrinter(error, history);
     }
@@ -177,7 +187,6 @@ export const CustSiteVerificationDetailSerial = () => {
   ];
 
   const handleMarkDelivered = async () => {
-    console.log('testing')
     try {
       const body = {
         Module: "Logistics",
@@ -185,7 +194,7 @@ export const CustSiteVerificationDetailSerial = () => {
         DONo: doNo,
         CreatedDate: DOData.CreatedDate,
         ModifiedDate: DOData.ModifiedDate,
-        DeliveredDate: dayjs().format("DD/MM/YYYY HH:mm")
+        DeliveredDate: dayjs().format("DD/MM/YYYY HH:mm"),
       };
 
       const responseParam = await AxiosWithLoading(
@@ -200,8 +209,9 @@ export const CustSiteVerificationDetailSerial = () => {
       } else {
         message.error("Mark Delivered failed");
       }
+      await getOnSiteScheduleIDVerification();
     } catch (error) {
-        console.log(error)
+      console.log(error);
       message.error("Mark Delivered failed");
     }
   };
@@ -222,72 +232,156 @@ export const CustSiteVerificationDetailSerial = () => {
   } else {
     return (
       <MobilePageShell
-        title="Cust site Verification"
+        title="Cust Site Verification"
         onBack={confirmLeave}
         onRefresh={getOnSiteScheduleIDVerification}
         rightHeaderComponent={
-          <>
-            <ConfirmDeliveryButton handleMarkDelivered={handleMarkDelivered} />
-            <Button
-              icon={<EditOutlined style={{ color: "#fff" }} />}
-              onClick={() => setShowModal(true)}
-              type="default"
-              style={{ backgroundColor: "#377188", border: "none" }}
-            />
-          </>
+          DOData &&
+          !DOData.DeliveredDate && (
+            <>
+              <ConfirmDeliveryButton
+                handleMarkDelivered={handleMarkDelivered}
+              />
+              <Button
+                icon={<EditOutlined style={{ color: "#fff" }} />}
+                onClick={() => setShowModal(true)}
+                type="default"
+                style={{ backgroundColor: "#377188", border: "none" }}
+              />
+            </>
+          )
         }
       >
-        <div style={{ padding: "16px" }}>
-          <SerialNoEntryModal
-            showModal={showModal}
-            setShowModal={setShowModal}
-            onSearch={(serial) => handleSubmit(serial)}
-          />
+        {!DOData || !DOData.DONo ? (
           <SpinLoading />
-          <Card
-            style={{ marginBottom: 24 }}
-            styles={{ padding: "16px" }}
-            variant="outlined"
-          >
-            <Space direction="vertical" style={{ width: "100%" }}>
-              <Title level={5} style={{ marginBottom: 8 }}>
-                Filter by Verification Status
-              </Title>
-              <Select
-                placeholder="Select status"
-                style={{ width: "100%" }}
-                value={isIssuedVerified?.id}
-                onChange={(id) => {
-                  const selected = isIssuedVerifiedList.find(
-                    (item) => item.id === id
-                  );
-                  setIsIssuedVerified(selected);
+        ) : !DOData.DeliveredDate ? (
+          <>
+            <div style={{ padding: "16px" }}>
+                <SpinLoading />
+              <SerialNoEntryModal
+                showModal={showModal}
+                setShowModal={setShowModal}
+                onSearch={(serial) => handleSubmit(serial)}
+              />
+
+<Card
+  style={{ marginBottom: 24 }}
+  styles={{ padding: "16px" }}
+  variant="outlined"
+>
+  <Space direction="vertical" style={{ width: "100%" }}>
+    {/* Progress Bar Section */}
+    <div>
+      <Text style={{ color: "#595959" }}>
+        Verification Progress:{" "}
+        <strong>
+          {totalRecords.TotalVerified} / {totalRecords.TotalSerial} verified
+        </strong>
+      </Text>
+      <Progress
+        percent={
+          totalRecords.TotalSerial > 0
+            ? Math.round(
+                (totalRecords.TotalVerified / totalRecords.TotalSerial) * 100
+              )
+            : 0
+        }
+        status={
+          totalRecords.TotalVerified === totalRecords.TotalSerial
+            ? "success"
+            : "active"
+        }
+        strokeColor="#52c41a"
+        trailColor="#d9d9d9"
+        showInfo={false}
+        style={{ marginTop: 8 }}
+      />
+    </div>
+
+    {/* Dropdown Section */}
+    <Title level={5} style={{ marginBottom: 8 }}>
+      Filter by Verification Status
+    </Title>
+    <Select
+      placeholder="Select status"
+      style={{ width: "100%" }}
+      value={isIssuedVerified?.id}
+      onChange={(id) => {
+        const selected = isIssuedVerifiedList.find((item) => item.id === id);
+        setIsIssuedVerified(selected);
+      }}
+    >
+      {isIssuedVerifiedList.map(({ id, text }) => (
+        <Select.Option key={id} value={id}>
+          {text}
+        </Select.Option>
+      ))}
+    </Select>
+  </Space>
+</Card>
+
+              <Card
+                title="Serial Verification List"
+                variant="outlined"
+                styles={{ padding: "16px" }}
+              >
+                <Table
+                  columns={columns}
+                  dataSource={data}
+                  rowKey="SerialNo"
+                  pagination={false}
+                  size="middle"
+                />
+              </Card>
+            </div>
+            <ScanListener onScanDetected={(barcode) => handleSubmit(barcode)} />
+          </>
+        ) : (
+          <>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                minHeight: "60vh", // vertical centering
+                padding: "2rem",
+              }}
+            >
+              <div
+                style={{
+                  backgroundColor: "#f6ffed",
+                  border: "1px solid #b7eb8f",
+                  borderRadius: 12,
+                  padding: "2rem",
+                  maxWidth: 600,
+                  width: "100%",
+                  boxShadow: "0 2px 8px rgba(0, 0, 0, 0.05)",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 16,
                 }}
               >
-                {isIssuedVerifiedList.map(({ id, text }) => (
-                  <Select.Option key={id} value={id}>
-                    {text}
-                  </Select.Option>
-                ))}
-              </Select>
-            </Space>
-          </Card>
+                <CheckCircleOutlined
+                  style={{ fontSize: "2em", color: "#52c41a" }}
+                />
 
-          <Card
-            title="Serial Verification List"
-            variant="outlined"
-            styles={{ padding: "16px" }}
-          >
-            <Table
-              columns={columns}
-              dataSource={data}
-              rowKey="SerialNo"
-              pagination={false}
-              size="middle"
-            />
-          </Card>
-        </div>
-        <ScanListener onScanDetected={(barcode) => handleSubmit(barcode)} />
+                <Space direction="vertical" size={4}>
+                  <Title level={4} style={{ margin: 0, color: "#389e0d" }}>
+                    Delivery Confirmed
+                  </Title>
+                  <Text style={{ color: "#595959" }}>
+                    This delivery order was marked as delivered on{" "}
+                    <strong>
+                      {dayjs(DOData?.DeliveredDate).format("DD-MM-YY HH:mm")}
+                    </strong>
+                    .
+                  </Text>
+                  <Tag color="green">Delivered</Tag>
+                </Space>
+              </div>
+            </div>
+          </>
+        )}
       </MobilePageShell>
     );
   }
@@ -375,19 +469,29 @@ const ConfirmDeliveryButton = ({ handleMarkDelivered }) => {
 
   return (
     <>
-      <Button type="primary" onClick={showModal} icon={<CheckCircleOutlined style={{ color: "#fff" }} />} style={{ backgroundColor: "#377188", border: "none" }}/>
-
-
+      <Button
+        type="primary"
+        onClick={showModal}
+        icon={<CheckCircleOutlined style={{ color: "#fff" }} />}
+        style={{ backgroundColor: "#377188", border: "none" }}
+      />
 
       <Modal
-        title="Confirm Delivery"
+        title="Mark as Delivered"
         open={isModalOpen}
         onOk={handleConfirm}
         onCancel={handleCancel}
         okText="Confirm"
         cancelText="Cancel"
+        okButtonProps={{
+          style: {
+            backgroundColor: "#377188", // your custom color
+            borderColor: "#377188",
+            color: "#fff",
+          },
+        }}
       >
-        <p>Do you want to confirm delivery?</p>
+        <p>Do you want to mark this delivery as delivered?</p>
         <p style={{ color: "red", fontWeight: 500 }}>
           This action is not reversible.
         </p>
