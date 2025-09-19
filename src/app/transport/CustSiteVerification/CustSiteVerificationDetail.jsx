@@ -5,7 +5,6 @@ import moment from "moment";
 import {
   AxiosWithLoading,
   ErrorPrinter,
-  playErrorSound,
   SpinLoading,
 } from "../../../constants/Common";
 import { APIHelper } from "../../../constants/APIHelper";
@@ -13,11 +12,9 @@ import MobilePageShell from "../../../constants/MobilePageShell";
 import { Typography, Divider } from "antd";
 import { RightOutlined } from "@ant-design/icons";
 import { PathLink } from "../../../constants/PathLink";
-import { playSound } from "../../../constants/Common";
-import { ScanListener } from "../../../constants/Common";
 import UnauthorizedPage from "../../../constants/Unauthorized";
 import { EditOutlined, KeyOutlined } from "@ant-design/icons";
-export const OnSiteVerificationDetail = () => {
+export const CustSiteVerificationDetail = () => {
 const [showModal, setShowModal] = useState(false);
   const [data, setData] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -29,12 +26,12 @@ const [showModal, setShowModal] = useState(false);
     try {
       let body = {
         Module: "Logistics",
-        ModuleAccessID: "4.8.1-1",
+        ModuleAccessID: "4.8.2-1",
         CoyID: 1,
         ScheduleID: scheduleID,
       };
       const responseParam = await AxiosWithLoading(
-        APIHelper.postConfig("/logistics/getOnSiteScheduleIDVerification", body)
+        APIHelper.postConfig("/logistics/getCustSiteScheduleIDVerification", body)
       );
       setData(responseParam.data.records);
       setAuthorized(true);
@@ -45,42 +42,9 @@ const [showModal, setShowModal] = useState(false);
   };
 
   const handleDetailClicked = (DONo) => {
-    history.push(PathLink.onSiteVerification + "/" + scheduleID + "/" + DONo);
+    history.push(PathLink.custSiteVerification + "/" + scheduleID + "/" + DONo);
   };
 
-  const handleSubmit = async (barcode) => {
-    try {
-      let body = {
-        Module: "Logistics",
-        ModuleAccessID: "4.8.1-1",
-        ScheduleID: scheduleID,
-        SerialNo: barcode,
-        CoyID: 1,
-      };
-
-      const responseParam = await AxiosWithLoading(
-        APIHelper.postConfig(
-          "/logistics/updateOnSiteVerificationDeliveryOrderSerial",
-          body
-        )
-      );
-
-      if (responseParam.status === 200) {
-        message.success("Serial :" + barcode + " updated successfully");
-        await initial();
-        playSound();
-        return true;
-      } else {
-        message.error("Serial :" + barcode + " updated failed");
-
-        return false;
-      }
-    } catch (error) {
-      playErrorSound();
-      message.error("Serial :" + barcode + " updated failed");
-      return false;
-    }
-  };
 
   const columns = [
     {
@@ -100,12 +64,12 @@ const [showModal, setShowModal] = useState(false);
   if (!authorized) {
     return (
       <MobilePageShell
-        title={"On Site Verification"}
+        title={"Cust Site Verification"}
         onBack={() => history.push("/")}
         onRefresh={initial}
       >
         <UnauthorizedPage
-          title={"View On Site Verification Detail (4.8.1, 1)"}
+          title={"View Cust Site Verification Detail (4.8.2, 1)"}
           subTitle={"Sorry, you are not authorized to access this page."}
         />
       </MobilePageShell>
@@ -113,7 +77,7 @@ const [showModal, setShowModal] = useState(false);
   } else {
     return (
       <MobilePageShell
-        title={"On Site Verification"}
+        title={"Cust Site Verification"}
         onBack={confirmLeave}
         onRefresh={() => initial()}
         rightHeaderComponent={
@@ -147,13 +111,14 @@ const [showModal, setShowModal] = useState(false);
             }}
           />
         </>
-        <ScanListener onScanDetected={(barcode) => handleSubmit(barcode)} />
       </MobilePageShell>
     );
   }
 };
 
 const { Title, Text } = Typography;
+
+
 
 const DeliveryCard = ({ record, onClick }) => {
   const {
@@ -253,6 +218,7 @@ const DeliveryCard = ({ record, onClick }) => {
     </Card>
   );
 };
+
 
 
 const SerialNoEntryModal = ({ showModal, setShowModal, onSearch }) => {

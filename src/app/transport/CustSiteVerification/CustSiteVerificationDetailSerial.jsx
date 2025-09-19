@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback,useRef } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useHistory, useParams } from "react-router-dom";
 import {
   AxiosWithLoading,
@@ -9,36 +9,64 @@ import {
   SpinLoading,
 } from "../../../constants/Common";
 import { APIHelper } from "../../../constants/APIHelper";
-import { Select, Table, Card, Space, Typography, message,Button,Modal,Input } from "antd";
+import {
+  Select,
+  Table,
+  Card,
+  Space,
+  Typography,
+  message,
+  Button,
+  Modal,
+  Input,
+} from "antd";
 import MobilePageShell from "../../../constants/MobilePageShell";
 import { CheckOutlined, CloseOutlined } from "@ant-design/icons";
 import UnauthorizedPage from "../../../constants/Unauthorized";
-import { EditOutlined, KeyOutlined } from "@ant-design/icons";
+import { EditOutlined, KeyOutlined,CheckCircleOutlined } from "@ant-design/icons";
 const { Title } = Typography;
-export const OnSiteVerificationDetailSerial = () => {
-    const [showModal, setShowModal] = useState(false);
+import dayjs from "dayjs";
+export const CustSiteVerificationDetailSerial = () => {
+  const [showModal, setShowModal] = useState(false);
   const history = useHistory();
   const [authorized, setAuthorized] = useState(true);
   const [data, setData] = useState([]);
   const { id, doNo } = useParams();
   const [isIssuedVerifiedList, setIsIssuedVerifiedList] = useState([]);
   const [isIssuedVerified, setIsIssuedVerified] = useState({});
-
+  const [DOData, setDOData] = useState({});
   const getOnSiteScheduleIDVerification = async () => {
+    getDOData();
     try {
       let body = {
         Module: "Logistics",
-        ModuleAccessID: "4.8.1-1",
+        ModuleAccessID: "4.8.2-1",
         DONo: doNo,
         IsIssuedVerified: isIssuedVerified.id,
       };
       const responseParam = await AxiosWithLoading(
         APIHelper.postConfig(
-          "/logistics/getOnSiteVerificationDeliveryOrderSerial",
+          "/logistics/getCustSiteVerificationDeliveryOrderSerial",
           body
         )
       );
       setData(responseParam.data.records);
+    } catch (error) {
+      ErrorPrinter(error, history);
+    }
+  };
+  const getDOData = async () => {
+    try {
+      let body = {
+        Module: "Logistics",
+        ModuleAccessID: "4.8.2-1",
+        DONo: doNo,
+      };
+
+      const responseParam = await AxiosWithLoading(
+        APIHelper.postConfig("/logistics/getDeliveryOrderByDONo", body)
+      );
+      setDOData(responseParam.data.records[0]);
     } catch (error) {
       ErrorPrinter(error, history);
     }
@@ -48,7 +76,7 @@ export const OnSiteVerificationDetailSerial = () => {
     try {
       let body = {
         Module: "Logistics",
-        ModuleAccessID: "4.8.1-1",
+        ModuleAccessID: "4.8.2-1",
         ParamList: "IsVerified",
       };
       let responseParam = await AxiosWithLoading(
@@ -79,15 +107,16 @@ export const OnSiteVerificationDetailSerial = () => {
     try {
       let body = {
         Module: "Logistics",
-        ModuleAccessID: "4.8.1-1",
-        ScheduleID: id,
+        ModuleAccessID: "4.8.2-1",
+        DONo: doNo,
         SerialNo: barcode,
         CoyID: 1,
       };
+      console.log(body);
 
       const responseParam = await AxiosWithLoading(
         APIHelper.postConfig(
-          "/logistics/updateOnSiteVerificationDeliveryOrderSerial",
+          "/logistics/updateCustSiteVerificationDeliveryOrderSerial",
           body
         )
       );
@@ -147,15 +176,45 @@ export const OnSiteVerificationDetailSerial = () => {
     },
   ];
 
+  const handleMarkDelivered = async () => {
+    console.log('testing')
+    try {
+      const body = {
+        Module: "Logistics",
+        ModuleAccessID: "4.8.2-1",
+        DONo: doNo,
+        CreatedDate: DOData.CreatedDate,
+        ModifiedDate: DOData.ModifiedDate,
+        DeliveredDate: dayjs().format("DD/MM/YYYY HH:mm")
+      };
+
+      const responseParam = await AxiosWithLoading(
+        APIHelper.postConfig(
+          "/logistics/updateCustSiteVerificationMarkDeliveredDO",
+          body
+        )
+      );
+
+      if (responseParam.status === 200) {
+        message.success("Marked as Delivered successfully");
+      } else {
+        message.error("Mark Delivered failed");
+      }
+    } catch (error) {
+        console.log(error)
+      message.error("Mark Delivered failed");
+    }
+  };
+
   if (!authorized) {
     return (
       <MobilePageShell
-        title={"On Site Verification"}
+        title={"Cust site Verification"}
         onBack={() => history.push("/")}
         onRefresh={initial}
       >
         <UnauthorizedPage
-          title={"View On Site Verification Detail (4.8.1, 1)"}
+          title={"View Cust site Verification Detail (4.8.1, 1)"}
           subTitle={"Sorry, you are not authorized to access this page."}
         />
       </MobilePageShell>
@@ -163,30 +222,32 @@ export const OnSiteVerificationDetailSerial = () => {
   } else {
     return (
       <MobilePageShell
-        title="On Site Verification"
+        title="Cust site Verification"
         onBack={confirmLeave}
         onRefresh={getOnSiteScheduleIDVerification}
-                rightHeaderComponent={
-          <Button
-            icon={<EditOutlined style={{ color: "#fff" }} />}
-            onClick={() => setShowModal(true)}
-            type="default"
-            style={{ backgroundColor: "#377188", border: "none" }}
-          />
+        rightHeaderComponent={
+          <>
+            <ConfirmDeliveryButton handleMarkDelivered={handleMarkDelivered} />
+            <Button
+              icon={<EditOutlined style={{ color: "#fff" }} />}
+              onClick={() => setShowModal(true)}
+              type="default"
+              style={{ backgroundColor: "#377188", border: "none" }}
+            />
+          </>
         }
       >
         <div style={{ padding: "16px" }}>
-        <SerialNoEntryModal
-          showModal={showModal}
-          setShowModal={setShowModal}
-          onSearch={(serial) => handleSubmit(serial)}
-        />
+          <SerialNoEntryModal
+            showModal={showModal}
+            setShowModal={setShowModal}
+            onSearch={(serial) => handleSubmit(serial)}
+          />
           <SpinLoading />
           <Card
             style={{ marginBottom: 24 }}
             styles={{ padding: "16px" }}
-            variant="outlined" 
-
+            variant="outlined"
           >
             <Space direction="vertical" style={{ width: "100%" }}>
               <Title level={5} style={{ marginBottom: 8 }}>
@@ -214,8 +275,7 @@ export const OnSiteVerificationDetailSerial = () => {
 
           <Card
             title="Serial Verification List"
-            variant="outlined" 
-
+            variant="outlined"
             styles={{ padding: "16px" }}
           >
             <Table
@@ -232,7 +292,6 @@ export const OnSiteVerificationDetailSerial = () => {
     );
   }
 };
-
 
 const SerialNoEntryModal = ({ showModal, setShowModal, onSearch }) => {
   const [serialNo, setSerialNo] = useState("");
@@ -292,10 +351,47 @@ const SerialNoEntryModal = ({ showModal, setShowModal, onSearch }) => {
 
       <Space>
         <Button onClick={() => setShowModal(false)}>Cancel</Button>
-        <Button type="primary" onClick={handleSearch} style={{ backgroundColor: "#377188" }}>
+        <Button
+          type="primary"
+          onClick={handleSearch}
+          style={{ backgroundColor: "#377188" }}
+        >
           Search
         </Button>
       </Space>
     </Modal>
+  );
+};
+
+const ConfirmDeliveryButton = ({ handleMarkDelivered }) => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const showModal = () => setIsModalOpen(true);
+  const handleCancel = () => setIsModalOpen(false);
+  const handleConfirm = async () => {
+    setIsModalOpen(false);
+    await handleMarkDelivered(); // uses today's date
+  };
+
+  return (
+    <>
+      <Button type="primary" onClick={showModal} icon={<CheckCircleOutlined style={{ color: "#fff" }} />} style={{ backgroundColor: "#377188", border: "none" }}/>
+
+
+
+      <Modal
+        title="Confirm Delivery"
+        open={isModalOpen}
+        onOk={handleConfirm}
+        onCancel={handleCancel}
+        okText="Confirm"
+        cancelText="Cancel"
+      >
+        <p>Do you want to confirm delivery?</p>
+        <p style={{ color: "red", fontWeight: 500 }}>
+          This action is not reversible.
+        </p>
+      </Modal>
+    </>
   );
 };

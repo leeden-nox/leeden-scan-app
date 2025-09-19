@@ -8,4 +8,7 @@ export const PathLink = {
   onSiteVerification: "/on-site-verification",
   onSiteVerificationDetail: "/on-site-verification/:id",
   onSiteVerificationDetailSerial: "/on-site-verification/:id/:doNo",
+  custSiteVerification: "/cust-site-verification",
+  custSiteVerificationDetail: "/cust-site-verification/:id",
+  custSiteVerificationDetailSerial: "/cust-site-verification/:id/:doNo",
 }

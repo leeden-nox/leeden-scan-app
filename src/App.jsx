@@ -15,6 +15,9 @@ import { FlowmeterReadingDetail } from './app/logistics/flowmeterReading/flowmet
 import { OnSiteVerification } from './app/transport/onSiteVerification/OnSiteVerification';
 import { OnSiteVerificationDetail } from './app/transport/onSiteVerification/onSiteVerificationDetail';
 import { OnSiteVerificationDetailSerial } from './app/transport/onSiteVerification/OnSiteVerificationDetailSerial';
+import { CustSiteVerification } from './app/transport/CustSiteVerification/CustSiteVerification';
+import { CustSiteVerificationDetail } from './app/transport/CustSiteVerification/CustSiteVerificationDetail';
+import { CustSiteVerificationDetailSerial } from './app/transport/CustSiteVerification/CustSiteVerificationDetailSerial';
 function App() {
 
   return (
@@ -38,9 +41,10 @@ function App() {
           <Route exact path={PathLink.onSiteVerificationDetail} component={OnSiteVerificationDetail} />
           <Route exact path={PathLink.onSiteVerificationDetailSerial} component={OnSiteVerificationDetailSerial} />
 
-
-
-
+          {/* Cust Site Verification */}
+          <Route exact path={PathLink.custSiteVerification} component={CustSiteVerification}/>
+          <Route exact path={PathLink.custSiteVerificationDetail} component={CustSiteVerificationDetail} />
+          <Route exact path={PathLink.custSiteVerificationDetailSerial} component={CustSiteVerificationDetailSerial} />
         </Switch>
       </BrowserRouter>
     </>
