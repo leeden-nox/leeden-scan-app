@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback,useRef } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useHistory, useParams } from "react-router-dom";
 import {
   AxiosWithLoading,
@@ -9,14 +9,25 @@ import {
   SpinLoading,
 } from "../../../constants/Common";
 import { APIHelper } from "../../../constants/APIHelper";
-import { Select, Table, Card, Space, Typography, message,Button,Modal,Input,Progress } from "antd";
+import {
+  Select,
+  Table,
+  Card,
+  Space,
+  Typography,
+  message,
+  Button,
+  Modal,
+  Input,
+  Progress,
+} from "antd";
 import MobilePageShell from "../../../constants/MobilePageShell";
 import { CheckOutlined, CloseOutlined } from "@ant-design/icons";
 import UnauthorizedPage from "../../../constants/Unauthorized";
 import { EditOutlined, KeyOutlined } from "@ant-design/icons";
-const { Title,Text } = Typography;
+const { Title, Text } = Typography;
 export const OnSiteVerificationDetailSerial = () => {
-    const [showModal, setShowModal] = useState(false);
+  const [showModal, setShowModal] = useState(false);
   const history = useHistory();
   const [authorized, setAuthorized] = useState(true);
   const [data, setData] = useState([]);
@@ -24,8 +35,9 @@ export const OnSiteVerificationDetailSerial = () => {
   const [isIssuedVerifiedList, setIsIssuedVerifiedList] = useState([]);
   const [isIssuedVerified, setIsIssuedVerified] = useState({});
   const [totalRecords, setTotalRecords] = useState({});
-
+  const [isLoading, setIsLoading] = useState(true);
   const getOnSiteScheduleIDVerification = async () => {
+    setIsLoading(true);
     try {
       let body = {
         Module: "Logistics",
@@ -39,12 +51,14 @@ export const OnSiteVerificationDetailSerial = () => {
           body
         )
       );
-      
+
       setData(responseParam.data.Records.records);
       setTotalRecords(responseParam.data.TotalRecords.records[0]);
-
     } catch (error) {
       ErrorPrinter(error, history);
+    }
+    finally{
+        setIsLoading(false);
     }
   };
 
@@ -170,7 +184,7 @@ export const OnSiteVerificationDetailSerial = () => {
         title="On Site Verification"
         onBack={confirmLeave}
         onRefresh={getOnSiteScheduleIDVerification}
-                rightHeaderComponent={
+        rightHeaderComponent={
           <Button
             icon={<EditOutlined style={{ color: "#fff" }} />}
             onClick={() => setShowModal(true)}
@@ -179,73 +193,79 @@ export const OnSiteVerificationDetailSerial = () => {
           />
         }
       >
+        {isLoading ? <SpinLoading /> : 
+        <>
         <div style={{ padding: "16px" }}>
-        <SerialNoEntryModal
-          showModal={showModal}
-          setShowModal={setShowModal}
-          onSearch={(serial) => handleSubmit(serial)}
-        />
+          <SerialNoEntryModal
+            showModal={showModal}
+            setShowModal={setShowModal}
+            onSearch={(serial) => handleSubmit(serial)}
+          />
           <SpinLoading />
-<Card
-  style={{ marginBottom: 24 }}
-  styles={{ padding: "16px" }}
-  variant="outlined"
->
-  <Space direction="vertical" style={{ width: "100%" }}>
-    {/* Progress Bar Section */}
-    <div>
-      <Text style={{ color: "#595959" }}>
-        Verification Progress:{" "}
-        <strong>
-          {totalRecords.TotalVerified} / {totalRecords.TotalSerial} verified
-        </strong>
-      </Text>
-      <Progress
-        percent={
-          totalRecords.TotalSerial > 0
-            ? Math.round(
-                (totalRecords.TotalVerified / totalRecords.TotalSerial) * 100
-              )
-            : 0
-        }
-        status={
-          totalRecords.TotalVerified === totalRecords.TotalSerial
-            ? "success"
-            : "active"
-        }
-        strokeColor="#52c41a"
-        trailColor="#d9d9d9"
-        showInfo={false}
-        style={{ marginTop: 8 }}
-      />
-    </div>
+          <Card
+            style={{ marginBottom: 24 }}
+            styles={{ padding: "16px" }}
+            variant="outlined"
+          >
+            <Space direction="vertical" style={{ width: "100%" }}>
+              {/* Progress Bar Section */}
+              <div>
+                <Text style={{ color: "#595959" }}>
+                  Verification Progress:{" "}
+                  <strong>
+                    {totalRecords.TotalVerified} / {totalRecords.TotalSerial}{" "}
+                    verified
+                  </strong>
+                </Text>
+                <Progress
+                  percent={
+                    totalRecords.TotalSerial > 0
+                      ? Math.round(
+                          (totalRecords.TotalVerified /
+                            totalRecords.TotalSerial) *
+                            100
+                        )
+                      : 0
+                  }
+                  status={
+                    totalRecords.TotalVerified === totalRecords.TotalSerial
+                      ? "success"
+                      : "active"
+                  }
+                  strokeColor="#52c41a"
+                  trailColor="#d9d9d9"
+                  showInfo={false}
+                  style={{ marginTop: 8 }}
+                />
+              </div>
 
-    {/* Dropdown Section */}
-    <Title level={5} style={{ marginBottom: 8 }}>
-      Filter by Verification Status
-    </Title>
-    <Select
-      placeholder="Select status"
-      style={{ width: "100%" }}
-      value={isIssuedVerified?.id}
-      onChange={(id) => {
-        const selected = isIssuedVerifiedList.find((item) => item.id === id);
-        setIsIssuedVerified(selected);
-      }}
-    >
-      {isIssuedVerifiedList.map(({ id, text }) => (
-        <Select.Option key={id} value={id}>
-          {text}
-        </Select.Option>
-      ))}
-    </Select>
-  </Space>
-</Card>
+              {/* Dropdown Section */}
+              <Title level={5} style={{ marginBottom: 8 }}>
+                Filter by Verification Status
+              </Title>
+              <Select
+                placeholder="Select status"
+                style={{ width: "100%" }}
+                value={isIssuedVerified?.id}
+                onChange={(id) => {
+                  const selected = isIssuedVerifiedList.find(
+                    (item) => item.id === id
+                  );
+                  setIsIssuedVerified(selected);
+                }}
+              >
+                {isIssuedVerifiedList.map(({ id, text }) => (
+                  <Select.Option key={id} value={id}>
+                    {text}
+                  </Select.Option>
+                ))}
+              </Select>
+            </Space>
+          </Card>
 
           <Card
             title="Serial Verification List"
-            variant="outlined" 
-
+            variant="outlined"
             styles={{ padding: "16px" }}
           >
             <Table
@@ -258,11 +278,11 @@ export const OnSiteVerificationDetailSerial = () => {
           </Card>
         </div>
         <ScanListener onScanDetected={(barcode) => handleSubmit(barcode)} />
+            </>}
       </MobilePageShell>
     );
   }
 };
-
 
 const SerialNoEntryModal = ({ showModal, setShowModal, onSearch }) => {
   const [serialNo, setSerialNo] = useState("");
@@ -322,7 +342,11 @@ const SerialNoEntryModal = ({ showModal, setShowModal, onSearch }) => {
 
       <Space>
         <Button onClick={() => setShowModal(false)}>Cancel</Button>
-        <Button type="primary" onClick={handleSearch} style={{ backgroundColor: "#377188" }}>
+        <Button
+          type="primary"
+          onClick={handleSearch}
+          style={{ backgroundColor: "#377188" }}
+        >
           Search
         </Button>
       </Space>

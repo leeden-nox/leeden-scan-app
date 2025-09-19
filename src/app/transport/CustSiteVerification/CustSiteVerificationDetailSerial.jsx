@@ -20,7 +20,7 @@ import {
   Modal,
   Input,
   Tag,
-  Progress
+  Progress,
 } from "antd";
 import MobilePageShell from "../../../constants/MobilePageShell";
 import { CheckOutlined, CloseOutlined } from "@ant-design/icons";
@@ -41,7 +41,7 @@ export const CustSiteVerificationDetailSerial = () => {
   const [isIssuedVerifiedList, setIsIssuedVerifiedList] = useState([]);
   const [isIssuedVerified, setIsIssuedVerified] = useState({});
   const [DOData, setDOData] = useState(null);
-    const [totalRecords, setTotalRecords] = useState({});
+  const [totalRecords, setTotalRecords] = useState({});
   const getOnSiteScheduleIDVerification = async () => {
     getDOData();
     try {
@@ -57,7 +57,7 @@ export const CustSiteVerificationDetailSerial = () => {
           body
         )
       );
-        setData(responseParam.data.Records.records);
+      setData(responseParam.data.Records.records);
       setTotalRecords(responseParam.data.TotalRecords.records[0]);
     } catch (error) {
       ErrorPrinter(error, history);
@@ -257,68 +257,73 @@ export const CustSiteVerificationDetailSerial = () => {
         ) : !DOData.DeliveredDate ? (
           <>
             <div style={{ padding: "16px" }}>
-                <SpinLoading />
+              <SpinLoading />
               <SerialNoEntryModal
                 showModal={showModal}
                 setShowModal={setShowModal}
                 onSearch={(serial) => handleSubmit(serial)}
               />
 
-<Card
-  style={{ marginBottom: 24 }}
-  styles={{ padding: "16px" }}
-  variant="outlined"
->
-  <Space direction="vertical" style={{ width: "100%" }}>
-    {/* Progress Bar Section */}
-    <div>
-      <Text style={{ color: "#595959" }}>
-        Verification Progress:{" "}
-        <strong>
-          {totalRecords.TotalVerified} / {totalRecords.TotalSerial} verified
-        </strong>
-      </Text>
-      <Progress
-        percent={
-          totalRecords.TotalSerial > 0
-            ? Math.round(
-                (totalRecords.TotalVerified / totalRecords.TotalSerial) * 100
-              )
-            : 0
-        }
-        status={
-          totalRecords.TotalVerified === totalRecords.TotalSerial
-            ? "success"
-            : "active"
-        }
-        strokeColor="#52c41a"
-        trailColor="#d9d9d9"
-        showInfo={false}
-        style={{ marginTop: 8 }}
-      />
-    </div>
+              <Card
+                style={{ marginBottom: 24 }}
+                styles={{ padding: "16px" }}
+                variant="outlined"
+              >
+                <Space direction="vertical" style={{ width: "100%" }}>
+                  {/* Progress Bar Section */}
+                  <div>
+                    <Text style={{ color: "#595959" }}>
+                      Verification Progress:{" "}
+                      <strong>
+                        {totalRecords.TotalVerified} /{" "}
+                        {totalRecords.TotalSerial} verified
+                      </strong>
+                    </Text>
+                    <Progress
+                      percent={
+                        totalRecords.TotalSerial > 0
+                          ? Math.round(
+                              (totalRecords.TotalVerified /
+                                totalRecords.TotalSerial) *
+                                100
+                            )
+                          : 0
+                      }
+                      status={
+                        totalRecords.TotalVerified === totalRecords.TotalSerial
+                          ? "success"
+                          : "active"
+                      }
+                      strokeColor="#52c41a"
+                      trailColor="#d9d9d9"
+                      showInfo={false}
+                      style={{ marginTop: 8 }}
+                    />
+                  </div>
 
-    {/* Dropdown Section */}
-    <Title level={5} style={{ marginBottom: 8 }}>
-      Filter by Verification Status
-    </Title>
-    <Select
-      placeholder="Select status"
-      style={{ width: "100%" }}
-      value={isIssuedVerified?.id}
-      onChange={(id) => {
-        const selected = isIssuedVerifiedList.find((item) => item.id === id);
-        setIsIssuedVerified(selected);
-      }}
-    >
-      {isIssuedVerifiedList.map(({ id, text }) => (
-        <Select.Option key={id} value={id}>
-          {text}
-        </Select.Option>
-      ))}
-    </Select>
-  </Space>
-</Card>
+                  {/* Dropdown Section */}
+                  <Title level={5} style={{ marginBottom: 8 }}>
+                    Filter by Verification Status
+                  </Title>
+                  <Select
+                    placeholder="Select status"
+                    style={{ width: "100%" }}
+                    value={isIssuedVerified?.id}
+                    onChange={(id) => {
+                      const selected = isIssuedVerifiedList.find(
+                        (item) => item.id === id
+                      );
+                      setIsIssuedVerified(selected);
+                    }}
+                  >
+                    {isIssuedVerifiedList.map(({ id, text }) => (
+                      <Select.Option key={id} value={id}>
+                        {text}
+                      </Select.Option>
+                    ))}
+                  </Select>
+                </Space>
+              </Card>
 
               <Card
                 title="Serial Verification List"
