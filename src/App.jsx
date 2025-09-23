@@ -18,6 +18,7 @@ import { OnSiteVerificationDetailSerial } from './app/transport/onSiteVerificati
 import { CustSiteVerification } from './app/transport/CustSiteVerification/CustSiteVerification';
 import { CustSiteVerificationDetail } from './app/transport/CustSiteVerification/CustSiteVerificationDetail';
 import { CustSiteVerificationDetailSerial } from './app/transport/CustSiteVerification/CustSiteVerificationDetailSerial';
+import UserAccess from './app/UserAccess/userAccess';
 function App() {
 
   return (
@@ -45,6 +46,9 @@ function App() {
           <Route exact path={PathLink.custSiteVerification} component={CustSiteVerification}/>
           <Route exact path={PathLink.custSiteVerificationDetail} component={CustSiteVerificationDetail} />
           <Route exact path={PathLink.custSiteVerificationDetailSerial} component={CustSiteVerificationDetailSerial} />
+          {/* User Access */}
+          <Route exact path={PathLink.userAccess} component={UserAccess} />
+
         </Switch>
       </BrowserRouter>
     </>
