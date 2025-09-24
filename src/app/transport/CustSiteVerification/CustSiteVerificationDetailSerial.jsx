@@ -24,7 +24,7 @@ import {
   Progress,
 } from "antd";
 import MobilePageShell from "../../../constants/MobilePageShell";
-import { CheckOutlined, CloseOutlined } from "@ant-design/icons";
+import { CheckOutlined, CloseOutlined, EyeOutlined } from "@ant-design/icons";
 import UnauthorizedPage from "../../../constants/Unauthorized";
 import {
   EditOutlined,
@@ -35,6 +35,7 @@ const { Title, Text } = Typography;
 import dayjs from "dayjs";
 import SignaturePadJpeg from "../../../constants/SignaturePadJpeg";
 import { set } from "lodash";
+import SignaturePreviewModal from "../../../constants/SignaturePreviewModal";
 export const CustSiteVerificationDetailSerial = () => {
   const [showModal, setShowModal] = useState(false);
   const history = useHistory();
@@ -46,6 +47,8 @@ export const CustSiteVerificationDetailSerial = () => {
   const [DOData, setDOData] = useState(null);
   const [totalRecords, setTotalRecords] = useState({});
   const [isLoading, setIsLoading] = useState(false);
+  const [visibleSignatureModal, setVisibleSignatureModal] = useState(false);
+  const [signatureBase64, setSignatureBase64] = useState(null);
   const getOnSiteScheduleIDVerification = async () => {
     getDOData();
     setIsLoading(true);
@@ -66,8 +69,7 @@ export const CustSiteVerificationDetailSerial = () => {
       setTotalRecords(responseParam.data.TotalRecords.records[0]);
     } catch (error) {
       ErrorPrinter(error, history);
-    }
-    finally {
+    } finally {
       setIsLoading(false);
     }
   };
@@ -88,8 +90,8 @@ export const CustSiteVerificationDetailSerial = () => {
       console.log(responseParam.data.records[0]);
     } catch (error) {
       ErrorPrinter(error, history);
-    } finally{
-    setIsLoading(false);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -157,8 +159,7 @@ export const CustSiteVerificationDetailSerial = () => {
       message.error("Serial :" + barcode + " updated failed");
       playErrorSound();
       return false;
-    }
-    finally {
+    } finally {
       setIsLoading(false);
     }
   };
@@ -225,23 +226,24 @@ export const CustSiteVerificationDetailSerial = () => {
       }
     } catch (error) {
       message.error("Mark Delivered failed");
-      
     } finally {
       await getOnSiteScheduleIDVerification();
       setIsLoading(false);
     }
   };
 
+  const viewSignature = async (hexBlob) => {
+    setVisibleSignatureModal(true);
+    setSignatureBase64(hexBlob);
+  };
+
   if (isLoading) {
     return (
-      <MobilePageShell
-        title="Cust Site Verification"
-        onBack={confirmLeave}
-      >
+      <MobilePageShell title="Cust Site Verification" onBack={confirmLeave}>
         <SpinLoadingByUseState loading={isLoading} />
       </MobilePageShell>
     );
-  } 
+  }
 
   if (!authorized) {
     return (
@@ -409,8 +411,27 @@ export const CustSiteVerificationDetailSerial = () => {
                     .
                   </Text>
                   <Tag color="green">Delivered</Tag>
+                  <Button
+                    type="primary"
+                    icon={<EyeOutlined />}
+                    size="middle"
+                    style={{
+                      marginTop: 8,
+                      backgroundColor: "#389e0d",
+                      borderColor: "#389e0d",
+                      alignSelf: "flex-start",
+                    }}
+                    onClick={() => viewSignature(DOData?.SignatureImageBlob)}
+                  >
+                    View Signature
+                  </Button>
                 </Space>
               </div>
+              <SignaturePreviewModal
+                visible={visibleSignatureModal}
+                setVisible={setVisibleSignatureModal}
+                base64String={signatureBase64}
+              />
             </div>
           </>
         )}
@@ -489,9 +510,9 @@ const SerialNoEntryModal = ({ showModal, setShowModal, onSearch }) => {
   );
 };
 
-const ConfirmDeliveryButton = ({ handleMarkDelivered,DONo }) => {
+const ConfirmDeliveryButton = ({ handleMarkDelivered, DONo }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-    const signDO = async (Signature) => {
+  const signDO = async (Signature) => {
     try {
       let body = {
         DONo: DONo,
@@ -515,13 +536,13 @@ const ConfirmDeliveryButton = ({ handleMarkDelivered,DONo }) => {
         style={{ backgroundColor: "#377188", border: "none" }}
       />
       <SignaturePadJpeg
-          visible={isModalOpen}
-          setVisible={setIsModalOpen}
-          modalTitle={`E-Sign for DO #${DONo}`}
-          onSubmit={(jpegDataUrl) => {
-            signDO(jpegDataUrl);
-          }}
-        />
+        visible={isModalOpen}
+        setVisible={setIsModalOpen}
+        modalTitle={`E-Sign for DO #${DONo}`}
+        onSubmit={(jpegDataUrl) => {
+          signDO(jpegDataUrl);
+        }}
+      />
     </>
   );
 };
