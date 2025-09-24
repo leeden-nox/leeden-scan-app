@@ -21,7 +21,7 @@ const SignaturePadJpeg = ({
   const handleSubmit = () => {
     if (sigPadRef.current?.isEmpty()) return;
 
-    const canvas = sigPadRef.current.getTrimmedCanvas();
+    const canvas = sigPadRef.current.getCanvas();
     const ctx = canvas.getContext("2d");
 
     // Fill background with white to avoid black image issue

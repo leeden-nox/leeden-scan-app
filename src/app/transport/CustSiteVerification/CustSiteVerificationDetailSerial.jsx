@@ -7,6 +7,7 @@ import {
   playSound,
   ScanListener,
   SpinLoading,
+  SpinLoadingByUseState,
 } from "../../../constants/Common";
 import { APIHelper } from "../../../constants/APIHelper";
 import {
@@ -32,6 +33,8 @@ import {
 } from "@ant-design/icons";
 const { Title, Text } = Typography;
 import dayjs from "dayjs";
+import SignaturePadJpeg from "../../../constants/SignaturePadJpeg";
+import { set } from "lodash";
 export const CustSiteVerificationDetailSerial = () => {
   const [showModal, setShowModal] = useState(false);
   const history = useHistory();
@@ -42,8 +45,10 @@ export const CustSiteVerificationDetailSerial = () => {
   const [isIssuedVerified, setIsIssuedVerified] = useState({});
   const [DOData, setDOData] = useState(null);
   const [totalRecords, setTotalRecords] = useState({});
+  const [isLoading, setIsLoading] = useState(false);
   const getOnSiteScheduleIDVerification = async () => {
     getDOData();
+    setIsLoading(true);
     try {
       let body = {
         Module: "Logistics",
@@ -62,8 +67,12 @@ export const CustSiteVerificationDetailSerial = () => {
     } catch (error) {
       ErrorPrinter(error, history);
     }
+    finally {
+      setIsLoading(false);
+    }
   };
   const getDOData = async () => {
+    setIsLoading(true);
     try {
       let body = {
         Module: "Logistics",
@@ -79,6 +88,8 @@ export const CustSiteVerificationDetailSerial = () => {
       console.log(responseParam.data.records[0]);
     } catch (error) {
       ErrorPrinter(error, history);
+    } finally{
+    setIsLoading(false);
     }
   };
 
@@ -114,6 +125,7 @@ export const CustSiteVerificationDetailSerial = () => {
     }
   }, [isIssuedVerified.id]);
   const handleSubmit = async (barcode) => {
+    setIsLoading(true);
     try {
       let body = {
         Module: "Logistics",
@@ -122,7 +134,6 @@ export const CustSiteVerificationDetailSerial = () => {
         SerialNo: barcode,
         CoyID: 1,
       };
-      console.log(body);
 
       const responseParam = await AxiosWithLoading(
         APIHelper.postConfig(
@@ -142,11 +153,13 @@ export const CustSiteVerificationDetailSerial = () => {
         return false;
       }
     } catch (error) {
-      let data = ErrorPrinter(error, history);
-      //   setAuthorized(data.authorized);
+      ErrorPrinter(error, history);
       message.error("Serial :" + barcode + " updated failed");
       playErrorSound();
       return false;
+    }
+    finally {
+      setIsLoading(false);
     }
   };
   const getContainerTypeLabel = (type) => {
@@ -187,6 +200,7 @@ export const CustSiteVerificationDetailSerial = () => {
   ];
 
   const handleMarkDelivered = async () => {
+    setIsLoading(true);
     try {
       const body = {
         Module: "Logistics",
@@ -209,19 +223,31 @@ export const CustSiteVerificationDetailSerial = () => {
       } else {
         message.error("Mark Delivered failed");
       }
-      await getOnSiteScheduleIDVerification();
     } catch (error) {
-      console.log(error);
       message.error("Mark Delivered failed");
+      
+    } finally {
+      await getOnSiteScheduleIDVerification();
+      setIsLoading(false);
     }
   };
+
+  if (isLoading) {
+    return (
+      <MobilePageShell
+        title="Cust Site Verification"
+        onBack={confirmLeave}
+      >
+        <SpinLoadingByUseState loading={isLoading} />
+      </MobilePageShell>
+    );
+  } 
 
   if (!authorized) {
     return (
       <MobilePageShell
         title={"Cust site Verification"}
         onBack={() => history.push("/")}
-        onRefresh={initial}
       >
         <UnauthorizedPage
           title={"View Cust site Verification Detail (4.8.1, 1)"}
@@ -241,6 +267,7 @@ export const CustSiteVerificationDetailSerial = () => {
             <>
               <ConfirmDeliveryButton
                 handleMarkDelivered={handleMarkDelivered}
+                DONo={doNo}
               />
               <Button
                 icon={<EditOutlined style={{ color: "#fff" }} />}
@@ -462,45 +489,39 @@ const SerialNoEntryModal = ({ showModal, setShowModal, onSearch }) => {
   );
 };
 
-const ConfirmDeliveryButton = ({ handleMarkDelivered }) => {
+const ConfirmDeliveryButton = ({ handleMarkDelivered,DONo }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+    const signDO = async (Signature) => {
+    try {
+      let body = {
+        DONo: DONo,
+        Signature: Signature,
+      };
 
-  const showModal = () => setIsModalOpen(true);
-  const handleCancel = () => setIsModalOpen(false);
-  const handleConfirm = async () => {
-    setIsModalOpen(false);
-    await handleMarkDelivered(); // uses today's date
+      await handleMarkDelivered();
+      await AxiosWithLoading(APIHelper.postConfig("/logistics/eSignDO", body));
+      setIsModalOpen(false);
+    } catch (error) {
+      ErrorPrinter(error);
+    }
   };
 
   return (
     <>
       <Button
         type="primary"
-        onClick={showModal}
+        onClick={() => setIsModalOpen(true)}
         icon={<CheckCircleOutlined style={{ color: "#fff" }} />}
         style={{ backgroundColor: "#377188", border: "none" }}
       />
-
-      <Modal
-        title="Mark as Delivered"
-        open={isModalOpen}
-        onOk={handleConfirm}
-        onCancel={handleCancel}
-        okText="Confirm"
-        cancelText="Cancel"
-        okButtonProps={{
-          style: {
-            backgroundColor: "#377188", // your custom color
-            borderColor: "#377188",
-            color: "#fff",
-          },
-        }}
-      >
-        <p>Do you want to mark this delivery as delivered?</p>
-        <p style={{ color: "red", fontWeight: 500 }}>
-          This action is not reversible.
-        </p>
-      </Modal>
+      <SignaturePadJpeg
+          visible={isModalOpen}
+          setVisible={setIsModalOpen}
+          modalTitle={`E-Sign for DO #${DONo}`}
+          onSubmit={(jpegDataUrl) => {
+            signDO(jpegDataUrl);
+          }}
+        />
     </>
   );
 };
