@@ -11,5 +11,7 @@ export const PathLink = {
   custSiteVerification: "/cust-site-verification",
   custSiteVerificationDetail: "/cust-site-verification/:id",
   custSiteVerificationDetailSerial: "/cust-site-verification/:id/:doNo",
-  userAccess: "/user-access"
+  userAccess: "/user-access",
+  driverEcr: "/driver-ecr",
+  driverEcrDetail: "/driver-ecr/:id",
 }

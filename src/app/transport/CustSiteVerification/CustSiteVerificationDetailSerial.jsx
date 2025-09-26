@@ -1,5 +1,21 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { CheckCircleOutlined, CheckOutlined, CloseOutlined, EditOutlined, EyeOutlined, KeyOutlined } from "@ant-design/icons";
+import {
+  Button,
+  Card,
+  Input,
+  message,
+  Modal,
+  Progress,
+  Select,
+  Space,
+  Table,
+  Tag,
+  Typography,
+} from "antd";
+import dayjs from "dayjs";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useHistory, useParams } from "react-router-dom";
+import { APIHelper } from "../../../constants/APIHelper";
 import {
   AxiosWithLoading,
   ErrorPrinter,
@@ -9,33 +25,11 @@ import {
   SpinLoading,
   SpinLoadingByUseState,
 } from "../../../constants/Common";
-import { APIHelper } from "../../../constants/APIHelper";
-import {
-  Select,
-  Table,
-  Card,
-  Space,
-  Typography,
-  message,
-  Button,
-  Modal,
-  Input,
-  Tag,
-  Progress,
-} from "antd";
 import MobilePageShell from "../../../constants/MobilePageShell";
-import { CheckOutlined, CloseOutlined, EyeOutlined } from "@ant-design/icons";
-import UnauthorizedPage from "../../../constants/Unauthorized";
-import {
-  EditOutlined,
-  KeyOutlined,
-  CheckCircleOutlined,
-} from "@ant-design/icons";
-const { Title, Text } = Typography;
-import dayjs from "dayjs";
 import SignaturePadJpeg from "../../../constants/SignaturePadJpeg";
-import { set } from "lodash";
 import SignaturePreviewModal from "../../../constants/SignaturePreviewModal";
+import UnauthorizedPage from "../../../constants/Unauthorized";
+const { Title, Text } = Typography;
 export const CustSiteVerificationDetailSerial = () => {
   const [showModal, setShowModal] = useState(false);
   const history = useHistory();
@@ -86,8 +80,6 @@ export const CustSiteVerificationDetailSerial = () => {
         APIHelper.postConfig("/logistics/getDeliveryOrderByDONo", body)
       );
       setDOData(responseParam.data.records[0]);
-      //DelieveredDate is NULL means that not yet delivered
-      console.log(responseParam.data.records[0]);
     } catch (error) {
       ErrorPrinter(error, history);
     } finally {
@@ -233,8 +225,10 @@ export const CustSiteVerificationDetailSerial = () => {
   };
 
   const viewSignature = async (hexBlob) => {
-    setVisibleSignatureModal(true);
+    getDOData();
     setSignatureBase64(hexBlob);
+    setVisibleSignatureModal(true);
+
   };
 
   if (isLoading) {
