@@ -14,4 +14,6 @@ export const PathLink = {
   userAccess: "/user-access",
   driverEcr: "/driver-ecr",
   driverEcrDetail: "/driver-ecr/:id",
+  ecr: "/ecr",
+  ecrDetail: "/ecr/:id",
 }

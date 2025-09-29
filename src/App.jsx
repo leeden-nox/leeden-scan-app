@@ -21,6 +21,8 @@ import { CustSiteVerificationDetailSerial } from './app/transport/CustSiteVerifi
 import UserAccess from './app/UserAccess/userAccess';
 import { DriverEcr } from './app/transport/DriverEcr/DriverEcr';
 import { DriverECRDetail } from './app/transport/DriverEcr/DriverEcrDetail';
+import { ECR } from './app/warehouse/ECR/ECR';
+import { ECRDetail } from './app/warehouse/ECR/ECRDetail';
 function App() {
 
   return (
@@ -54,7 +56,9 @@ function App() {
           {/* Driver ECR */}
           <Route exact path={PathLink.driverEcr} component={DriverEcr} />
           <Route exact path={PathLink.driverEcrDetail} component={DriverECRDetail} />
-
+          {/* ECR */}
+          <Route exact path={PathLink.ecr} component={ECR} />
+          <Route exact path={PathLink.ecrDetail} component={ECRDetail} />
         </Switch>
       </BrowserRouter>
     </>
