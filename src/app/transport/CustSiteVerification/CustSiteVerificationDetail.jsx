@@ -50,7 +50,6 @@ export const CustSiteVerificationDetail = () => {
           body
         )
       );
-      console.log(responseParam.data.records);
       setData(responseParam.data.records);
       setAuthorized(true);
     } catch (error) {

@@ -1,17 +1,31 @@
-import { CheckCircleOutlined, CloseCircleOutlined, DeleteOutlined, EditOutlined, KeyOutlined,WarningOutlined,CheckCircleFilled,BarsOutlined,ExclamationCircleOutlined } from "@ant-design/icons";
+import {
+  BarsOutlined,
+  CheckCircleFilled,
+  CheckCircleOutlined,
+  CloseCircleOutlined,
+  DeleteOutlined,
+  EditOutlined,
+  ExclamationCircleOutlined,
+  KeyOutlined,
+  WarningOutlined,
+  EyeOutlined
+} from "@ant-design/icons";
 import {
   Button,
   Card,
+  Col,
   Form,
   Input,
   message,
   Modal,
+  Result,
+  Row,
   Select,
   Space,
   Table,
   Tooltip,
   Typography,
-  Row,Col,
+  Tag
 } from "antd";
 import { useEffect, useRef, useState } from "react";
 import { useHistory, useParams } from "react-router-dom";
@@ -26,8 +40,11 @@ import {
   SpinLoadingByUseState,
 } from "../../../constants/Common";
 import MobilePageShell from "../../../constants/MobilePageShell";
+import SignaturePadJpeg from "../../../constants/SignaturePadJpeg";
 import UnauthorizedPage from "../../../constants/Unauthorized";
-const { Text } = Typography;
+import SignaturePreviewModal from "../../../constants/SignaturePreviewModal";
+import dayjs from "dayjs";
+const { Text,Title } = Typography;
 export const DriverECRDetail = () => {
   const [showModal, setShowModal] = useState(false);
   const history = useHistory();
@@ -42,6 +59,8 @@ export const DriverECRDetail = () => {
   const [ownerTypeList, setOwnerTypeList] = useState([]);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedSerialNoObject, setSelectedSerialNoObject] = useState(null);
+  const [visibleSignatureModal, setVisibleSignatureModal] = useState(false);
+  const [signatureBase64, setSignatureBase64] = useState(null);
   const getDriverECRDetailSerial = async () => {
     setIsLoading(true);
     try {
@@ -56,7 +75,6 @@ export const DriverECRDetail = () => {
       );
       setData(responseParam.data.Records.records);
       setTotalRecords(responseParam.data.TotalRecords.records[0]);
-      console.log(responseParam.data.TotalRecords.records[0]);
     } catch (error) {
       ErrorPrinter(error, history);
     } finally {
@@ -90,7 +108,6 @@ export const DriverECRDetail = () => {
         ECRNo: id,
         SerialNo: serialNo,
       };
-      console.log(body);
       const responseParam = await AxiosWithLoading(
         APIHelper.postConfig("/logistics/deleteDriverECR2DetailSerial", body)
       );
@@ -163,64 +180,134 @@ export const DriverECRDetail = () => {
       dataIndex: "SerialNo",
       key: "SerialNo",
     },
-{
-  title: "Empty",
-  dataIndex: "IsFullGasReturn",
-  key: "IsFullGasReturn",
-  render: (value) =>
-    value ? (
-      <Tooltip title="Full">
-        <CloseCircleOutlined style={{ color: 'red', fontSize: 16 }} />
-      </Tooltip>
-    ) : (
-      <Tooltip title="Empty">
-        <CheckCircleOutlined style={{ color: 'green', fontSize: 16 }} />
-      </Tooltip>
-    ),
-},
-{
-  title: "Faulty",
-  dataIndex: "Remarks",
-  key: "Remarks",
-render: (value) =>
-  value === "Faulty Container" ? (
-    <Tooltip title="Faulty">
-      <WarningOutlined style={{ color: 'red' }} />
-    </Tooltip>
-  ) : (
-    <Tooltip title="OK">
-      <CheckCircleFilled style={{ color: 'green' }} />
-    </Tooltip>
-  )
-},
-{
-  title: "Action",
-  key: "action",
-  render: (_, record) => (
-    <div style={{ display: 'flex', gap: 8 }}>
-      <Tooltip title="Delete">
-        <Button
-          type="text"
-          icon={<DeleteOutlined style={{ color: '#ff4d4f' }} />}
-          onClick={() => handleDelete(record.SerialNo)}
-        />
-      </Tooltip>
-      <Tooltip title="Edit">
-        <Button
-          type="text"
-          icon={<EditOutlined />}
-          onClick={() => handleEdit(record)}
-        />
-      </Tooltip>
-    </div>
-  ),
-}
+    {
+      title: "Empty",
+      dataIndex: "IsFullGasReturn",
+      key: "IsFullGasReturn",
+      render: (value) =>
+        value ? (
+          <Tooltip title="Full">
+            <CloseCircleOutlined style={{ color: "red", fontSize: 16 }} />
+          </Tooltip>
+        ) : (
+          <Tooltip title="Empty">
+            <CheckCircleOutlined style={{ color: "green", fontSize: 16 }} />
+          </Tooltip>
+        ),
+    },
+    {
+      title: "Faulty",
+      dataIndex: "Remarks",
+      key: "Remarks",
+      render: (value) =>
+        value === "Faulty Container" ? (
+          <Tooltip title="Faulty">
+            <WarningOutlined style={{ color: "red" }} />
+          </Tooltip>
+        ) : (
+          <Tooltip title="OK">
+            <CheckCircleFilled style={{ color: "green" }} />
+          </Tooltip>
+        ),
+    },
+    {
+      title: "Action",
+      key: "action",
+      render: (_, record) => (
+        <div style={{ display: "flex", gap: 8 }}>
+          <Tooltip title="Delete">
+            <Button
+              type="text"
+              icon={<DeleteOutlined style={{ color: "#ff4d4f" }} />}
+              onClick={() => handleDelete(record.SerialNo)}
+            />
+          </Tooltip>
+          <Tooltip title="Edit">
+            <Button
+              type="text"
+              icon={<EditOutlined />}
+              onClick={() => handleEdit(record)}
+            />
+          </Tooltip>
+        </div>
+      ),
+    },
   ];
 
   if (isLoading) {
     return (
-      <MobilePageShell title={"Driver ECR"} onBack={() => history.push("/")}>
+      <MobilePageShell title={"Driver ECR"} onBack={() => history.goBack()}>
         <SpinLoadingByUseState loading={isLoading} />
+      </MobilePageShell>
+    );
+  }
+  if (data.length > 0 && data[0].SignatureImageBlob != null) {
+    return (
+      <MobilePageShell title={"Driver ECR"} onBack={() => history.goBack()}>
+          <>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                minHeight: "60vh", // vertical centering
+                padding: "2rem",
+              }}
+            >
+              <div
+                style={{
+                  backgroundColor: "#f6ffed",
+                  border: "1px solid #b7eb8f",
+                  borderRadius: 12,
+                  padding: "2rem",
+                  maxWidth: 600,
+                  width: "100%",
+                  boxShadow: "0 2px 8px rgba(0, 0, 0, 0.05)",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 16,
+                }}
+              >
+                <CheckCircleOutlined
+                  style={{ fontSize: "2em", color: "#52c41a" }}
+                />
+
+                <Space direction="vertical" size={4}>
+                  <Title level={4} style={{ margin: 0, color: "#389e0d" }}>
+                    ECR Signed
+                  </Title>
+                  <Text style={{ color: "#595959" }}>
+                    This ECR was Signed on{" "}
+                    <strong>
+                      {dayjs(data[0].SignatureDate).format("DD-MM-YY HH:mm")}
+                      {/* {dayjs(DOData?.DeliveredDate).format("DD-MM-YY HH:mm")} */}
+                    </strong>
+                    .
+                  </Text>
+                  <Tag color="green">Signed</Tag>
+                  <Button
+                    type="primary"
+                    icon={<EyeOutlined />}
+                    size="middle"
+                    style={{
+                      marginTop: 8,
+                      backgroundColor: "#389e0d",
+                      borderColor: "#389e0d",
+                      alignSelf: "flex-start",
+                    }}
+                      onClick={() => setVisibleSignatureModal(true)}
+                  >
+                    View Signature
+                  </Button>
+                </Space>
+              </div>
+              <SignaturePreviewModal
+                visible={visibleSignatureModal}
+                setVisible={setVisibleSignatureModal}
+                base64String={data[0].SignatureImageBlob}
+              />
+            </div>
+          </>
       </MobilePageShell>
     );
   }
@@ -241,12 +328,18 @@ render: (value) =>
         onBack={confirmLeave}
         onRefresh={getDriverECRDetailSerial}
         rightHeaderComponent={
-          <Button
-            icon={<EditOutlined style={{ color: "#fff" }} />}
-            onClick={() => setShowModal(true)}
-            type="default"
-            style={{ backgroundColor: "#377188", border: "none" }}
-          />
+          <>
+            <SignDriverECRButton
+              ECRNo={id}
+              onRefresh={getDriverECRDetailSerial}
+            />
+            <Button
+              icon={<EditOutlined style={{ color: "#fff" }} />}
+              onClick={() => setShowModal(true)}
+              type="default"
+              style={{ backgroundColor: "#377188", border: "none" }}
+            />
+          </>
         }
       >
         {isLoading ? (
@@ -273,39 +366,39 @@ render: (value) =>
               <SpinLoading />
 
               <Card
-  title="Serial List"
-  variant="outlined"
-  styles={{ padding: "16px" }}
->
-  <Row gutter={[8, 8]} style={{ marginBottom: 12 }}>
-    <Col span={8}>
-      <Space>
-        <BarsOutlined style={{ color: '#1890ff' }} />
-        <Text>Total: {totalRecords.Total}</Text>
-      </Space>
-    </Col>
-    <Col span={8}>
-      <Space>
-        <ExclamationCircleOutlined style={{ color: '#ff4d4f' }} />
-        <Text>Faulty: {totalRecords.NoOfFaulty}</Text>
-      </Space>
-    </Col>
-    <Col span={8}>
-      <Space>
-        <CheckCircleOutlined style={{ color: '#52c41a' }} />
-        <Text>OK: {totalRecords.NoOfNonFaulty}</Text>
-      </Space>
-    </Col>
-  </Row>
+                title="Serial List"
+                variant="outlined"
+                styles={{ padding: "16px" }}
+              >
+                <Row gutter={[8, 8]} style={{ marginBottom: 12 }}>
+                  <Col span={8}>
+                    <Space>
+                      <BarsOutlined style={{ color: "#1890ff" }} />
+                      <Text>Total: {totalRecords.Total}</Text>
+                    </Space>
+                  </Col>
+                  <Col span={8}>
+                    <Space>
+                      <ExclamationCircleOutlined style={{ color: "#ff4d4f" }} />
+                      <Text>Faulty: {totalRecords.NoOfFaulty}</Text>
+                    </Space>
+                  </Col>
+                  <Col span={8}>
+                    <Space>
+                      <CheckCircleOutlined style={{ color: "#52c41a" }} />
+                      <Text>OK: {totalRecords.NoOfNonFaulty}</Text>
+                    </Space>
+                  </Col>
+                </Row>
 
-  <Table
-    columns={columns}
-    dataSource={data}
-    rowKey="SerialNo"
-    pagination={false}
-    size="middle"
-  />
-</Card>
+                <Table
+                  columns={columns}
+                  dataSource={data}
+                  rowKey="SerialNo"
+                  pagination={false}
+                  size="middle"
+                />
+              </Card>
             </div>
             <ScanListener onScanDetected={(barcode) => handleSubmit(barcode)} />
           </>
@@ -326,9 +419,7 @@ const SerialNoEditModal = ({
   const [form] = Form.useForm();
 
   const handleFinish = async (values) => {
-    console.log(values);
-    console.log(selectedSerialObject);
-        onClose();
+    onClose();
     try {
       const body = {
         ECRNo: selectedSerialObject.ECRNo,
@@ -336,8 +427,6 @@ const SerialNoEditModal = ({
         IsFullGasReturn: values.status == "1" ? true : false,
         Remarks: values.remark,
       };
-      console.log(body);
-      
 
       const responseParam = await AxiosWithLoading(
         APIHelper.postConfig("/logistics/modifyDriverECR2Detail", body)
@@ -348,8 +437,7 @@ const SerialNoEditModal = ({
         );
         onRefresh();
         return;
-      }
-      else {
+      } else {
         message.error(
           "Serial :" + selectedSerialObject.SerialNo + " updated failed"
         );
@@ -357,10 +445,11 @@ const SerialNoEditModal = ({
       }
     } catch (error) {
       ErrorPrinter(error, history);
-      message.error("Serial :" + selectedSerialObject.SerialNo + " updated failed");
+      message.error(
+        "Serial :" + selectedSerialObject.SerialNo + " updated failed"
+      );
     }
     form.resetFields();
-
   };
   useEffect(() => {
     if (visible && selectedSerialObject) {
@@ -382,10 +471,7 @@ const SerialNoEditModal = ({
       footer={null}
     >
       <Form form={form} layout="vertical" onFinish={handleFinish}>
-        <Form.Item
-          label="Faulty?"
-          name="remark"
-        >
+        <Form.Item label="Faulty?" name="remark">
           <Select placeholder="Select Remark">
             {RemarkList.map(({ id, text }) => (
               <Select.Option key={id || "no-id"} value={id}>
@@ -486,5 +572,43 @@ const SerialNoEntryModal = ({ showModal, setShowModal, onSearch }) => {
         </Button>
       </Space>
     </Modal>
+  );
+};
+
+const SignDriverECRButton = ({ ECRNo, onRefresh }) => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const signDO = async (Signature) => {
+    setIsModalOpen(false);
+    try {
+      let body = {
+        ECRNo: ECRNo,
+        Signature: Signature,
+      };
+      await AxiosWithLoading(APIHelper.postConfig("/logistics/eSignECR", body));
+      onRefresh();
+      setIsModalOpen(false);
+      message.success("ECR Signed successfully");
+    } catch (error) {
+      ErrorPrinter(error);
+    }
+  };
+
+  return (
+    <>
+      <Button
+        type="primary"
+        onClick={() => setIsModalOpen(true)}
+        icon={<CheckCircleOutlined style={{ color: "#fff" }} />}
+        style={{ backgroundColor: "#377188", border: "none" }}
+      />
+      <SignaturePadJpeg
+        visible={isModalOpen}
+        setVisible={setIsModalOpen}
+        modalTitle={`E-Sign for ECR #${ECRNo}`}
+        onSubmit={(jpegDataUrl) => {
+          signDO(jpegDataUrl);
+        }}
+      />
+    </>
   );
 };

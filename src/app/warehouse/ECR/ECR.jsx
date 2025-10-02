@@ -1,14 +1,14 @@
-import { PlusOutlined } from "@ant-design/icons";
-import { Button, Card, Modal, Table, Typography } from "antd";
+import { Button, Card, Table, Typography,DatePicker } from "antd";
+import dayjs from "dayjs";
 import moment from "moment";
 import { useEffect, useState } from "react";
-import { Route, Switch, useHistory } from "react-router-dom";
+import { useHistory } from "react-router-dom";
 import { APIHelper } from "../../../constants/APIHelper";
 import {
-    AxiosWithLoading,
-    ErrorPrinter,
-    SpinLoading,
-    SpinLoadingByUseState,
+  AxiosWithLoading,
+  ErrorPrinter,
+  SpinLoading,
+  SpinLoadingByUseState,
 } from "../../../constants/Common";
 import MobilePageShell from "../../../constants/MobilePageShell";
 import { PathLink } from "../../../constants/PathLink";
@@ -17,24 +17,22 @@ const { Text } = Typography;
 export const ECR = () => {
   const [data, setData] = useState([]);
   const [authorized, setAuthorized] = useState(true);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
   const history = useHistory();
   const [isLoading, setIsLoading] = useState(false);
-  const [defaultECRWarehouse, setDefaultECRWarehouse] = useState("");
-  const initial = async (SkippedRecords, PageSize) => {
+  const [selectedDate, setSelectedDate] = useState(dayjs()); // default to today
+
+  const initial = async () => {
     setIsLoading(true);
     fetchParamData();
     try {
       let body = {
-        PageSize: PageSize,
-        SkippedRecords: SkippedRecords,
+        Date: selectedDate.format("YYYY-MM-DD") //using today's date
       };
       const responseParam = await AxiosWithLoading(
-        APIHelper.postConfig("/logistics/getDriverECRByUserID", body)
+        APIHelper.postConfig("/logistics/getDriverECRForConvert", body)
       );
-      //setAuthorized(true);
-      setData(responseParam.data.Records.records);
+      console.log("api is called");
+      setData(responseParam.data.Table);
     } catch (error) {
       //setAuthorized(false);
       ErrorPrinter(error);
@@ -48,13 +46,10 @@ export const ECR = () => {
       let body = {
         Module: "Logistics",
         ModuleAccessID: "4.8.4-1",
-        ParamList: "IsDefaultECRWarehouse",
+        ParamList: "",
       };
       let responseParam = await AxiosWithLoading(
         APIHelper.postConfig("/common/ParameterData", body)
-      );
-      setDefaultECRWarehouse(
-        responseParam.data.IsDefaultECRWarehouse[0].Warehouse
       );
       setAuthorized(true);
     } catch (error) {
@@ -69,6 +64,10 @@ export const ECR = () => {
     });
   };
 
+  const handleDateChange = (date) => {
+  if (!date || date.isSame(selectedDate, "day")) return;
+  setSelectedDate(date);
+};
 
 
   const columns = [
@@ -98,7 +97,7 @@ export const ECR = () => {
                 ECRNo: {record.ECRNo}
               </div>
               <div style={{ color: "#8c8c8c", marginTop: "12px" }}>
-                Date: {moment(record.ScheduleDate).format("YYYY-MM-DD")}
+                Date: {moment(record.ECRDate).format("YYYY-MM-DD")}
               </div>
               <div style={{ color: "#8c8c8c", marginTop: "12px" }}>
                 ECRStatusName: {record.ECRStatusName}
@@ -124,16 +123,15 @@ export const ECR = () => {
   ];
 
   useEffect(() => {
-    const skippedRecords = (currentPage - 1) * pageSize;
-    initial(skippedRecords, pageSize);
-  }, [currentPage, pageSize]);
+    initial();
+  }, [selectedDate]);
 
   if(isLoading) {
         return (
       <MobilePageShell
         title={"Convert Driver ECR"}
         onBack={() => history.push("/")}
-        onRefresh={initial}
+        onRefresh={() => initial()}
       >
         <SpinLoadingByUseState loading={isLoading} />
       </MobilePageShell>
@@ -145,7 +143,7 @@ export const ECR = () => {
       <MobilePageShell
         title={"Convert Driver ECR"}
         onBack={() => history.push("/")}
-        onRefresh={initial}
+        onRefresh={() => initial()}
       >
         <UnauthorizedPage
           title={"View Convert Driver ECR (4.8.4, 1)"}
@@ -155,30 +153,36 @@ export const ECR = () => {
     );
   } else {
     return (
-          <MobilePageShell
-            title={"Convert Driver ECR"}
-            onBack={() => history.push("/")}
-            onRefresh={() => {
-              const skippedRecords = (currentPage - 1) * pageSize;
-              initial(skippedRecords, pageSize);
-            }}
-          >
-            <SpinLoading />
-            <Table
-              dataSource={data}
-              columns={columns}
-              rowKey={(record) => record.ScheduleID}
-              pagination={{
-                current: currentPage,
-                pageSize: pageSize,
-                showSizeChanger: true,
-                onChange: (page, newPageSize) => {
-                  setCurrentPage(page);
-                  setPageSize(newPageSize);
-                },
-              }}
-            />
-          </MobilePageShell>
+<MobilePageShell
+  title="Convert Driver ECR"
+  onBack={() => history.push("/")}
+  onRefresh={() => {
+    initial();
+  }}
+>
+  <div style={{ padding: "12px" }}>
+    <div style={{ marginBottom: "16px" }}>
+      <label style={{ display: "block", marginBottom: "8px", fontWeight: 500 }}>
+        Select Date
+      </label>
+      <DatePicker
+        value={selectedDate}
+        onChange={handleDateChange}
+        format="YYYY-MM-DD"
+        style={{ width: "100%" }}
+      />
+    </div>
+
+    <Table
+      dataSource={data}
+      columns={columns}
+      rowKey={(record) => record.ECRNo}
+      scroll={{ x: true }}
+      size="small"
+    />
+  </div>
+</MobilePageShell>
+
     );
   }
 };

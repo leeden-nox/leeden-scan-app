@@ -80,6 +80,8 @@ export const CustSiteVerificationDetailSerial = () => {
         APIHelper.postConfig("/logistics/getDeliveryOrderByDONo", body)
       );
       setDOData(responseParam.data.records[0]);
+      console.log(responseParam.data.records[0].SignatureImageBlob);
+      setSignatureBase64(responseParam.data.records[0].SignatureImageBlob);
     } catch (error) {
       ErrorPrinter(error, history);
     } finally {
@@ -212,7 +214,7 @@ export const CustSiteVerificationDetailSerial = () => {
       );
 
       if (responseParam.status === 200) {
-        message.success("Marked as Delivered successfully");
+        message.success("Marked as Delivered successfully");;
       } else {
         message.error("Mark Delivered failed");
       }
@@ -224,12 +226,12 @@ export const CustSiteVerificationDetailSerial = () => {
     }
   };
 
-  const viewSignature = async (hexBlob) => {
+  const viewSignature = () => {
     getDOData();
-    setSignatureBase64(hexBlob);
     setVisibleSignatureModal(true);
 
   };
+
 
   if (isLoading) {
     return (
@@ -415,7 +417,7 @@ export const CustSiteVerificationDetailSerial = () => {
                       borderColor: "#389e0d",
                       alignSelf: "flex-start",
                     }}
-                    onClick={() => viewSignature(DOData?.SignatureImageBlob)}
+                    onClick={() => viewSignature()}
                   >
                     View Signature
                   </Button>

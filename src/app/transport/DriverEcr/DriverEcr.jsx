@@ -1,18 +1,19 @@
 import { PlusOutlined } from "@ant-design/icons";
-import { Button, Card, Modal, Table, Typography } from "antd";
+import { Button, Card, Modal, Table, Typography, DatePicker } from "antd";
 import moment from "moment";
 import { useEffect, useState } from "react";
 import { Route, Switch, useHistory } from "react-router-dom";
 import { APIHelper } from "../../../constants/APIHelper";
 import {
-    AxiosWithLoading,
-    ErrorPrinter,
-    SpinLoading,
-    SpinLoadingByUseState,
+  AxiosWithLoading,
+  ErrorPrinter,
+  SpinLoading,
+  SpinLoadingByUseState,
 } from "../../../constants/Common";
 import MobilePageShell from "../../../constants/MobilePageShell";
 import { PathLink } from "../../../constants/PathLink";
 import UnauthorizedPage from "../../../constants/Unauthorized";
+import dayjs from "dayjs";
 const { Text } = Typography;
 export const DriverEcr = () => {
   const [data, setData] = useState([]);
@@ -22,13 +23,13 @@ export const DriverEcr = () => {
   const history = useHistory();
   const [isLoading, setIsLoading] = useState(false);
   const [defaultECRWarehouse, setDefaultECRWarehouse] = useState("");
-  const initial = async (SkippedRecords, PageSize) => {
+  const [selectedDate, setSelectedDate] = useState(dayjs());
+  const initial = async () => {
     setIsLoading(true);
     fetchParamData();
     try {
       let body = {
-        PageSize: PageSize,
-        SkippedRecords: SkippedRecords,
+        Date: moment().format("YYYY-MM-DD"),
       };
       const responseParam = await AxiosWithLoading(
         APIHelper.postConfig("/logistics/getDriverECRByUserID", body)
@@ -60,7 +61,7 @@ export const DriverEcr = () => {
     } catch (error) {
       let data = ErrorPrinter(error, history);
       setAuthorized(false);
-    } 
+    }
   };
 
   const goToDetail = (ecrNo) => {
@@ -70,20 +71,22 @@ export const DriverEcr = () => {
   };
   const handleAddNewRecord = () => {
     Modal.confirm({
-    title: "Create New Driver ECR",
-    content: "You are about to create a new Driver ECR. Do you want to continue?",
-    okText: "Create",
-    cancelText: "Cancel",
-    centered: true,
-    async onOk() {
-      // Your creation logic here
-      await handleInsertECR2();
-      // e.g. createECRRecord();
-    },
-    okButtonProps: { style: { backgroundColor: "#377188", borderColor: "#377188" } },
-  });
-}
-
+      title: "Create New Driver ECR",
+      content:
+        "You are about to create a new Driver ECR. Do you want to continue?",
+      okText: "Create",
+      cancelText: "Cancel",
+      centered: true,
+      async onOk() {
+        // Your creation logic here
+        await handleInsertECR2();
+        // e.g. createECRRecord();
+      },
+      okButtonProps: {
+        style: { backgroundColor: "#377188", borderColor: "#377188" },
+      },
+    });
+  };
 
   const handleInsertECR2 = async () => {
     setIsLoading(true);
@@ -96,17 +99,15 @@ export const DriverEcr = () => {
       );
       //responseParam.data.records[0].ECRNo
       //route to the ECRNO detail page
-    history.push({
-      pathname: PathLink.driverEcr + "/" + responseParam.data,
-    });
+      history.push({
+        pathname: PathLink.driverEcr + "/" + responseParam.data,
+      });
     } catch (error) {
       console.log(error);
+    } finally {
+      setIsLoading(false);
     }
-    finally {
-        setIsLoading(false);
-        }
   };
-
 
   const columns = [
     {
@@ -135,13 +136,24 @@ export const DriverEcr = () => {
                 ECRNo: {record.ECRNo}
               </div>
               <div style={{ color: "#8c8c8c", marginTop: "12px" }}>
-                Date: {moment(record.ScheduleDate).format("YYYY-MM-DD")}
+                Date: {moment(record.ECRDate).format("YYYY-MM-DD")}
               </div>
               <div style={{ color: "#8c8c8c", marginTop: "12px" }}>
                 ECRStatusName: {record.ECRStatusName}
               </div>
               <div style={{ color: "#8c8c8c", marginTop: "12px" }}>
                 Cylinder Count: {record.SerialCount}
+              </div>
+              <div style={{ marginTop: "12px", color: "#8c8c8c" }}>
+                Signed:{" "}
+                <span
+                  style={{
+                    fontWeight: "bold",
+                    color: record.SignatureImageBlob ? "#52c41a" : "#ff4d4f",
+                  }}
+                >
+                  {record.SignatureImageBlob ? "Yes" : "No"}
+                </span>
               </div>
 
               <div style={{ marginTop: "12px", textAlign: "left" }}>
@@ -159,14 +171,17 @@ export const DriverEcr = () => {
       },
     },
   ];
+  const handleDateChange = (date) => {
+    if (!date || date.isSame(selectedDate, "day")) return;
+    setSelectedDate(date);
+  };
 
   useEffect(() => {
-    const skippedRecords = (currentPage - 1) * pageSize;
-    initial(skippedRecords, pageSize);
-  }, [currentPage, pageSize]);
+    initial();
+  }, [selectedDate]);
 
-  if(isLoading) {
-        return (
+  if (isLoading) {
+    return (
       <MobilePageShell
         title={"Driver ECR"}
         onBack={() => history.push("/")}
@@ -192,39 +207,42 @@ export const DriverEcr = () => {
     );
   } else {
     return (
-          <MobilePageShell
-            title={"Driver ECR"}
-            onBack={() => history.push("/")}
-            onRefresh={() => {
-              const skippedRecords = (currentPage - 1) * pageSize;
-              initial(skippedRecords, pageSize);
-            }}
-            rightHeaderComponent={
-              <Button
-                type="primary"
-                icon={<PlusOutlined />}
-                style={{ backgroundColor: "#377188", borderColor: "#377188" }}
-                onClick={handleAddNewRecord}
-              >
-              </Button>
-            }
-          >
-            <SpinLoading />
-            <Table
-              dataSource={data}
-              columns={columns}
-              rowKey={(record) => record.ScheduleID}
-              pagination={{
-                current: currentPage,
-                pageSize: pageSize,
-                showSizeChanger: true,
-                onChange: (page, newPageSize) => {
-                  setCurrentPage(page);
-                  setPageSize(newPageSize);
-                },
-              }}
+      <MobilePageShell
+        title={"Driver ECR"}
+        onBack={() => history.push("/")}
+        onRefresh={initial}
+        rightHeaderComponent={
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            style={{ backgroundColor: "#377188", borderColor: "#377188" }}
+            onClick={handleAddNewRecord}
+          ></Button>
+        }
+      >
+        <SpinLoading />
+        <div style={{ padding: "12px" }}>
+          <div style={{ marginBottom: "16px" }}>
+            <label
+              style={{ display: "block", marginBottom: "8px", fontWeight: 500 }}
+            >
+              Select Date
+            </label>
+            <DatePicker
+              value={selectedDate}
+              onChange={handleDateChange}
+              format="YYYY-MM-DD"
+              style={{ width: "100%" }}
             />
-          </MobilePageShell>
+          </div>
+
+          <Table
+            dataSource={data}
+            columns={columns}
+            rowKey={(record) => record.ECRNo}
+          />
+        </div>
+      </MobilePageShell>
     );
   }
 };

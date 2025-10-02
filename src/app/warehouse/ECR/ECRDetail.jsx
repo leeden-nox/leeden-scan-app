@@ -1,28 +1,28 @@
 import {
+  BarsOutlined,
+  CheckCircleFilled,
   CheckCircleOutlined,
   CloseCircleOutlined,
-  DeleteOutlined,
   EditOutlined,
-  KeyOutlined,
-  WarningOutlined,
-  CheckCircleFilled,
-  BarsOutlined,
   ExclamationCircleOutlined,
+  KeyOutlined,
+  WarningOutlined
 } from "@ant-design/icons";
 import {
   Button,
   Card,
+  Col,
   Form,
   Input,
   message,
   Modal,
+  Row,
   Select,
   Space,
   Table,
   Tooltip,
   Typography,
-  Row,
-  Col,
+  Result
 } from "antd";
 import { useEffect, useRef, useState } from "react";
 import { useHistory, useParams } from "react-router-dom";
@@ -148,7 +148,17 @@ export const ECRDetail = () => {
       const responseParam = await AxiosWithLoading(
         APIHelper.postConfig("/logistics/convertDriverEcrToECR", body)
       );
+      if (responseParam.status === 200) {
+        message.success("Driver ECR converted successfully");
+        getDriverECRDetailSerial();
+        return;
+      } else {
+        message.error("Driver ECR convert failed");
+        return;
+      }
+
     } catch (error) {
+      getDriverECRDetailSerial();
       ErrorPrinter(error, history);
     } finally {
       setIsLoading(false);
@@ -227,9 +237,41 @@ export const ECRDetail = () => {
     return (
       <MobilePageShell
         title={"Convert Driver ECR"}
-        onBack={() => history.push("/")}
+        onBack={() => history.goBack()}
       >
         <SpinLoadingByUseState loading={isLoading} />
+      </MobilePageShell>
+    );
+  }
+    if (data.length > 0 && data[0].ECRStatusID == 'C') {
+    return (
+      <MobilePageShell title={"Driver ECR"} onBack={() => history.goBack()}>
+        <Result
+      status="success"
+      title="Driver ECR Processed"
+      subTitle="The document has been successfully processed by the store."
+      extra={[
+        <Button type="primary" key="home" onClick={() => history.goBack()}>
+          Back to Home
+        </Button>,
+      ]}
+    />
+      </MobilePageShell>
+    );
+  }
+      if (data.length > 0 && data[0].ECRStatusID == 'D') {
+    return (
+      <MobilePageShell title={"Driver ECR"} onBack={() => history.goBack()}>
+        <Result
+      status="error"
+      title="Requires Manual Solve"
+      subTitle="Please use Operation LMS to solve."
+      extra={[
+        <Button type="primary" key="home" onClick={() => history.goBack()}>
+          Back to Home
+        </Button>
+      ]}
+    />
       </MobilePageShell>
     );
   }
