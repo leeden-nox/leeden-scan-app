@@ -29,7 +29,7 @@ export const DriverEcr = () => {
     fetchParamData();
     try {
       let body = {
-        Date: moment().format("YYYY-MM-DD"),
+        Date: selectedDate.format("YYYY-MM-DD"),
       };
       const responseParam = await AxiosWithLoading(
         APIHelper.postConfig("/logistics/getDriverECRByUserID", body)
