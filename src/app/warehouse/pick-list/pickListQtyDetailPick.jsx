@@ -1,4 +1,3 @@
-import "./FullScreenPage.css";
 import {
   BarcodeOutlined,
   CheckCircleOutlined,
@@ -6,27 +5,28 @@ import {
   DeleteOutlined,
   EditOutlined,
 } from "@ant-design/icons";
-import { useHistory, useParams, useLocation } from "react-router-dom";
-import { useEffect, useState, useRef } from "react";
-import dayjs from "dayjs";
 import {
   Button,
   Card,
-  Space,
-  Typography,
+  Col,
+  Divider,
   Input,
   InputNumber,
+  List,
   message,
   Modal,
   Row,
-  Col,
-  List,
-  Divider,
+  Space,
+  Typography,
 } from "antd";
-import { AxiosWithLoading, ErrorPrinter, playErrorSound, playSound, ScanListener, SpinLoading } from "../../../constants/Common";
+import dayjs from "dayjs";
+import { useEffect, useRef, useState } from "react";
+import { useHistory, useLocation, useParams } from "react-router-dom";
 import { APIHelper } from "../../../constants/APIHelper";
+import { AxiosWithLoading, ErrorPrinter, playErrorSound, playSound, ScanListener, SpinLoading } from "../../../constants/Common";
 import MobilePageShell from "../../../constants/MobilePageShell";
 import UnauthorizedPage from "../../../constants/Unauthorized";
+import "./FullScreenPage.css";
 
 const { Text } = Typography;
 export const PickListQtyDetailPick = () => {
@@ -58,6 +58,9 @@ export const PickListQtyDetailPick = () => {
   const [modalFulfillVisible, setModalFulfillVisible] = useState(false);
   const [csSelectMoreThanOneBatch, setCSSelectMoreThanOneBatch] =
     useState(false);
+  const [binLocation, setBinLocation] = useState([]);
+  const [showBinLocation, setShowBinLocation] = useState(false);
+  const [selectedBin, setSelectedBin] = useState(null)
   const getPickListQtyDetail = async () => {
     try {
       let body = {
@@ -67,6 +70,7 @@ export const PickListQtyDetailPick = () => {
       const response = await AxiosWithLoading(
         APIHelper.postConfig("/logistics/getPickListQtyDetailSeqNo", body)
       );
+      console.log('data: ', response.data)
       const headerData = response.data.Records.records;
       setAuthorized(true);
       setData(headerData);
@@ -164,11 +168,18 @@ export const PickListQtyDetailPick = () => {
       message.error("Please enter a valid picked quantity");
       return;
     }
+    if (data[0]?.IsBinActivated && !selectedBin){
+      message.error("Please select bin location first.");
+      return;
+    }
     try {
       let body = {
         DONo: DONo,
         DetailNo: DetailNo,
         QtyPicked: QtyPicked,
+        Warehouse: data[0].Warehouse,
+        Location: selectedBin?.Bin || '',
+        IsBin: data[0]?.IsBinActivated || false
       };
       await AxiosWithLoading(
         APIHelper.postConfig("/logistics/pickListQtyPerformPick", body)
@@ -194,6 +205,8 @@ export const PickListQtyDetailPick = () => {
       Warehouse: data[0].Warehouse,
       ProdCode: data[0].OrderedProdCode,
       UOM: data[0].UOM,
+      Location: selectedBin?.Bin || '',
+      IsBin: data[0]?.IsBinActivated || false
     };
 
     await AxiosWithLoading(
@@ -204,19 +217,25 @@ export const PickListQtyDetailPick = () => {
   };
 
   const updatePickListSerial = async (DONo, DetailNo) => {
-    let body = {
-      DONo: DONo,
-      DetailNo: DetailNo,
-      Serial: selectedSerial.Serial,
-      MfrSerialNo: selectedSerial.MfrSerialNo || '',
-      AdmissionDate: selectedSerial.AdmissionDate,
-      Warehouse: selectedSerial.Warehouse,
-    };
-    await AxiosWithLoading(
-      APIHelper.postConfig("/logistics/pickListSerialPick", body)
-    );
-    getPickListQtyDetail();
-    message.success("Pick List updated successfully");
+    try {
+      let body = {
+        DONo: DONo,
+        DetailNo: DetailNo,
+        Serial: selectedSerial.Serial,
+        MfrSerialNo: selectedSerial.MfrSerialNo || '',
+        AdmissionDate: selectedSerial.AdmissionDate,
+        Warehouse: selectedSerial.Warehouse,
+        Location: selectedBin?.Bin || '',
+        IsBin: data[0]?.IsBinActivated || false
+      };
+      await AxiosWithLoading(
+        APIHelper.postConfig("/logistics/pickListSerialPick", body)
+      );
+      getPickListQtyDetail();
+      message.success("Pick List updated successfully");
+    } catch (error) {
+      ErrorPrinter(error);
+    }
   }
 
   const scanBarcode = (barcode) => {
@@ -403,6 +422,10 @@ const validatePicking = async (DetailNo) => {
       message.error("Batch already added.", 1.5);
       return;
     }
+    if (data[0]?.IsBinActivated && !selectedBin){
+      message.error("Please select bin location first.");
+      return;
+    }
 
     updatePickListBatch(DONo, id, pickedQty);
     setPickedQty(null);
@@ -414,6 +437,10 @@ const validatePicking = async (DetailNo) => {
       message.error("Please select a serial before adding.");
       return;
     }
+    if (!selectedBin && data[0]?.IsBinActivated){
+      message.error("Please select bin location first.");
+      return;
+    }
     if (batchSerialData.some((item) => item.Serial === selectedSerial.Serial)) {
       message.error("Serial already added.");
       return;
@@ -421,6 +448,27 @@ const validatePicking = async (DetailNo) => {
 
     updatePickListSerial(DONo, id);
     setSelectedSerial(null)
+  }
+
+  const handleAddBin = async () => {
+    try {
+      if (!isVerified) {
+        message.error("Please verify product code first.");
+        return;
+      }
+      const response = await AxiosWithLoading(
+        APIHelper.postConfig('/logistics/getProductBinLocation', {
+          ProdCode: data[0].OrderedProdCode,
+          Warehouse: data[0].Warehouse
+        })
+      );
+      if (response.data) {
+        setBinLocation(response.data?.Records?.records || []);
+      }
+      setShowBinLocation(true);
+    } catch (error) {
+      ErrorPrinter(error);
+    }
   }
 
   return showBatchModal ? (
@@ -443,7 +491,16 @@ const validatePicking = async (DetailNo) => {
       setSelected={setSelectedSerial}
       isBatch={false}
     />
-  ) : (
+  ) : showBinLocation ? (
+    <BinLocationModal
+      visible={showBinLocation}
+      onClose={() => setShowBinLocation(false)}
+      list={binLocation}
+      onRefresh={handleAddBin}
+      setSelected={setSelectedBin}
+    />
+  ):
+  (
     <MobilePageShell
       title={"Detail Item"}
       onBack={confirmLeave}
@@ -526,6 +583,15 @@ const validatePicking = async (DetailNo) => {
                     {data[0].WarehouseRemarks ? data[0].WarehouseRemarks : "-"}
                   </Text>
                 </Space>
+                {data[0].IsBinActivated && (
+                  <Space
+                    direction="horizontal"
+                    style={{ justifyContent: "space-between", width: "100%" }}
+                  >
+                    <Text strong>{'Bin Location'}</Text>
+                    <Text onClick={() => handleAddBin()} disabled={!selectedBin}>{selectedBin ? selectedBin.Bin : "Please select bin >"}</Text>
+                  </Space>
+                )}
               </Space>
             </Card>
             {/* Track by batch */}
@@ -741,7 +807,7 @@ const validatePicking = async (DetailNo) => {
                 <InputNumber
                   placeholder="Enter picked quantity"
                   min={0}
-                  max={data[0].OrderedQty}
+                  max={data[0].OrderedQty > (selectedBin?.Qty || 0) ? data[0].OrderedQty : selectedBin?.Qty}
                   value={pickedQty}
                   onChange={setPickedQty}
                   disabled={!isVerified}
@@ -937,3 +1003,31 @@ const BatchSerialModal = ({
     )
   );
 };
+
+const BinLocationModal = ({
+  visible,
+  onClose,
+  list = [],
+  onRefresh,
+  setSelected,
+}) => {
+  return visible && (
+    <MobilePageShell
+      title={'Bin Location'}
+      onBack={onClose}
+      onRefresh={() =>
+        onRefresh()
+      }
+    >
+      <SpinLoading />
+      <div className="mt-3">
+        {list.map((detail, index) => (
+          <div key={index} onClick={() => {setSelected({Bin: detail.Bin, Qty: detail.OnHandQty}); onClose()}} className="px-3 py-2 my-2 mx-1 d-flex justify-content-between" style={{background:'white',borderRadius:'0.5rem'}}>
+            <span>{detail.Bin}</span>
+            <span style={{fontWeight:'bold'}}>{detail.OnHandQty}</span>
+          </div>
+        ))}
+      </div>
+    </MobilePageShell>
+  )
+}
