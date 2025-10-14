@@ -20,13 +20,16 @@ import {
   AxiosWithLoading,
   ErrorPrinter,
   SpinLoading,
+  ScanListener,
+  playSound,
+  playErrorSound,
 } from "../../../constants/Common";
 import { APIHelper } from "../../../constants/APIHelper";
 import MobilePageShell from "../../../constants/MobilePageShell";
 import { Typography, Divider } from "antd";
 import { PathLink } from "../../../constants/PathLink";
 import UnauthorizedPage from "../../../constants/Unauthorized";
-import { BorderOutlined, CheckSquareOutlined } from "@ant-design/icons";
+import { BorderOutlined, CheckSquareOutlined,KeyOutlined,EditOutlined } from "@ant-design/icons";
 export const CustSiteVerificationDetail = () => {
   const [showModal, setShowModal] = useState(false);
   const [data, setData] = useState([]);
@@ -35,6 +38,7 @@ export const CustSiteVerificationDetail = () => {
   const history = useHistory();
   const [authorized, setAuthorized] = useState(true);
   const scheduleID = useParams().id.split("?")[0];
+  const accountCode = useParams().accountCode.split("?")[0];
   const [showOnlyUnverified, setShowOnlyUnverified] = useState(false);
   const initial = async () => {
     try {
@@ -43,6 +47,7 @@ export const CustSiteVerificationDetail = () => {
         ModuleAccessID: "4.8.2-1",
         CoyID: 1,
         ScheduleID: scheduleID,
+        AccountCode: accountCode,
       };
       const responseParam = await AxiosWithLoading(
         APIHelper.postConfig(
@@ -59,7 +64,7 @@ export const CustSiteVerificationDetail = () => {
   };
 
   const handleDetailClicked = (DONo) => {
-    history.push(PathLink.custSiteVerification + "/" + scheduleID + "/" + DONo);
+    history.push(PathLink.custSiteVerification + "/" + scheduleID + "/" + accountCode + "/" + DONo);
   };
 
   const filteredData = showOnlyUnverified
@@ -68,7 +73,7 @@ export const CustSiteVerificationDetail = () => {
 
   const columns = [
     {
-      title: "DO",
+      title: "DO for Account Code " + accountCode,
       dataIndex: "DONo",
       render: (_, record) => (
         <DeliveryCard record={record} onClick={handleDetailClicked} />
@@ -78,6 +83,42 @@ export const CustSiteVerificationDetail = () => {
   const confirmLeave = () => {
     history.goBack();
   };
+  const handleSubmit = async (barcode) => {
+    try {
+      let body = {
+        Module: "Logistics",
+        ModuleAccessID: "4.8.2-1",
+        ScheduleID: scheduleID,
+        AccountCode: accountCode,
+        SerialNo: barcode,
+        CoyID: 1,
+      };
+
+      const responseParam = await AxiosWithLoading(
+        APIHelper.postConfig(
+          "/logistics/updateCustSiteVerificationDeliveryOrderSerialByAccountCode",
+          body
+        )
+      );
+
+      if (responseParam.status === 200) {
+        message.success("Serial :" + barcode + " updated successfully");
+        await initial();
+        playSound();
+        return true;
+      } else {
+        message.error("Serial :" + barcode + " updated failed");
+        playErrorSound();
+        return false;
+      }
+    } catch (error) {
+      ErrorPrinter(error, history);
+      message.error("Serial :" + barcode + " updated failed");
+      playErrorSound();
+      return false;
+    } 
+  };
+
   useEffect(() => {
     initial();
   }, [currentPage, pageSize]);
@@ -101,6 +142,13 @@ export const CustSiteVerificationDetail = () => {
         onBack={confirmLeave}
         onRefresh={() => initial()}
         rightHeaderComponent={
+          <>
+          <Button
+                icon={<EditOutlined style={{ color: "#fff" }} />}
+                onClick={() => setShowModal(true)}
+                type="default"
+                style={{ backgroundColor: "#377188", border: "none" }}
+              />
           <Button
             type="text"
             icon={
@@ -115,10 +163,16 @@ export const CustSiteVerificationDetail = () => {
               border: "none",
             }}
           />
+          </>
         }
       >
         <>
           <SpinLoading />
+              <SerialNoEntryModal
+                showModal={showModal}
+                setShowModal={setShowModal}
+                onSearch={(serial) => handleSubmit(serial)}
+              />
           <Table
             rowKey={(record) => record.DONo}
             dataSource={filteredData}
@@ -133,6 +187,7 @@ export const CustSiteVerificationDetail = () => {
               },
             }}
           />
+          <ScanListener onScanDetected={(barcode) => handleSubmit(barcode)} />
         </>
       </MobilePageShell>
     );
@@ -257,5 +312,75 @@ const DeliveryCard = ({ record, onClick }) => {
         />
       </div>
     </Card>
+  );
+};
+
+const SerialNoEntryModal = ({ showModal, setShowModal, onSearch }) => {
+  const [serialNo, setSerialNo] = useState("");
+  const inputRef = useRef(null);
+  const { Text } = Typography;
+  useEffect(() => {
+    if (showModal) {
+      setSerialNo("");
+      setTimeout(() => inputRef.current?.focus(), 150); // focus for mobile
+    }
+  }, [showModal]);
+
+  const handleSearch = () => {
+    const value = serialNo.trim();
+    if (value) {
+      onSearch(value); // 🔍 pass to parent for processing
+      setShowModal(false);
+    }
+  };
+
+  return (
+    <Modal
+      open={showModal}
+      footer={null}
+      centered
+      closable={false}
+      maskClosable={false}
+      width="100%"
+      style={{
+        maxWidth: "100vw",
+        padding: "32px 16px",
+        textAlign: "center",
+      }}
+      styles={{
+        body: {
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: 24,
+        },
+      }}
+    >
+      <KeyOutlined style={{ fontSize: 48, color: "#377188" }} />
+      <Text strong>Enter Serial Number</Text>
+      <Text type="secondary">
+        Barcode damaged? Enter manually to verify for the cylinder.
+      </Text>
+
+      <Input
+        ref={inputRef}
+        value={serialNo}
+        onChange={(e) => setSerialNo(e.target.value)}
+        onPressEnter={handleSearch}
+        placeholder="Type Serial Number"
+        style={{ textAlign: "center", maxWidth: 320 }}
+      />
+
+      <Space>
+        <Button onClick={() => setShowModal(false)}>Cancel</Button>
+        <Button
+          type="primary"
+          onClick={handleSearch}
+          style={{ backgroundColor: "#377188" }}
+        >
+          Search
+        </Button>
+      </Space>
+    </Modal>
   );
 };

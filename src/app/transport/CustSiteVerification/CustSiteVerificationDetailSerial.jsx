@@ -80,7 +80,6 @@ export const CustSiteVerificationDetailSerial = () => {
         APIHelper.postConfig("/logistics/getDeliveryOrderByDONo", body)
       );
       setDOData(responseParam.data.records[0]);
-      console.log(responseParam.data.records[0].SignatureImageBlob);
       setSignatureBase64(responseParam.data.records[0].SignatureImageBlob);
     } catch (error) {
       ErrorPrinter(error, history);

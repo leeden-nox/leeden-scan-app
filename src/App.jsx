@@ -23,6 +23,7 @@ import { DriverEcr } from './app/transport/DriverEcr/DriverEcr';
 import { DriverECRDetail } from './app/transport/DriverEcr/DriverEcrDetail';
 import { ECR } from './app/warehouse/ECR/ECR';
 import { ECRDetail } from './app/warehouse/ECR/ECRDetail';
+import { CustSiteVerificationAccountCode } from './app/transport/CustSiteVerification/CustSiteVerificationAccountCode';
 function App() {
 
   return (
@@ -48,6 +49,7 @@ function App() {
 
           {/* Cust Site Verification */}
           <Route exact path={PathLink.custSiteVerification} component={CustSiteVerification}/>
+          <Route exact path={PathLink.custSiteVerificationAccountCode} component={CustSiteVerificationAccountCode} />
           <Route exact path={PathLink.custSiteVerificationDetail} component={CustSiteVerificationDetail} />
           <Route exact path={PathLink.custSiteVerificationDetailSerial} component={CustSiteVerificationDetailSerial} />
           {/* User Access */}
