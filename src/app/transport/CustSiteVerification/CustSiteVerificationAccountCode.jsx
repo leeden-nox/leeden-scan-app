@@ -50,6 +50,7 @@ export const CustSiteVerificationAccountCode = () => {
           body
         )
       );
+      console.log(responseParam.data.records)
       setData(responseParam.data.records);
       setAuthorized(true);
     } catch (error) {
@@ -63,7 +64,7 @@ export const CustSiteVerificationAccountCode = () => {
   };
 
   const filteredData = showOnlyUnverified
-    ? data.filter((item) => item.DOStatusName != "Completed")
+    ? data.filter((item) => item.NoOfDO != item.NoOfDeliveredDO)
     : data;
 
   const columns = [
