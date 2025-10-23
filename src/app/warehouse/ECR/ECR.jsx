@@ -31,7 +31,6 @@ export const ECR = () => {
       const responseParam = await AxiosWithLoading(
         APIHelper.postConfig("/logistics/getDriverECRForConvert", body)
       );
-      console.log("api is called");
       setData(responseParam.data.Table);
     } catch (error) {
       //setAuthorized(false);

@@ -79,7 +79,7 @@ export const DriverEcr = () => {
       centered: true,
       async onOk() {
         // Your creation logic here
-        await handleInsertECR2();
+        await handleInsertDriverECR();
         // e.g. createECRRecord();
       },
       okButtonProps: {
@@ -88,14 +88,14 @@ export const DriverEcr = () => {
     });
   };
 
-  const handleInsertECR2 = async () => {
+  const handleInsertDriverECR = async () => {
     setIsLoading(true);
     try {
       let body = {
         Warehouse: defaultECRWarehouse,
       };
       const responseParam = await AxiosWithLoading(
-        APIHelper.postConfig("/logistics/insertDriverECR2", body)
+        APIHelper.postConfig("/logistics/insertDriverECR", body)
       );
       //responseParam.data.records[0].ECRNo
       //route to the ECRNO detail page

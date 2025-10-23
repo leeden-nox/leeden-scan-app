@@ -71,7 +71,7 @@ export const DriverECRDetail = () => {
         IsIssuedVerified: isIssuedVerified.id,
       };
       const responseParam = await AxiosWithLoading(
-        APIHelper.postConfig("/logistics/getDriverECR2DetailSerial", body)
+        APIHelper.postConfig("/logistics/getDriverECRDetailSerial", body)
       );
       setData(responseParam.data.Records.records);
       setTotalRecords(responseParam.data.TotalRecords.records[0]);
@@ -109,7 +109,7 @@ export const DriverECRDetail = () => {
         SerialNo: serialNo,
       };
       const responseParam = await AxiosWithLoading(
-        APIHelper.postConfig("/logistics/deleteDriverECR2DetailSerial", body)
+        APIHelper.postConfig("/logistics/deleteDriverECRDetailSerial", body)
       );
 
       if (responseParam.status === 200) {
@@ -137,7 +137,7 @@ export const DriverECRDetail = () => {
       };
 
       const responseParam = await AxiosWithLoading(
-        APIHelper.postConfig("/logistics/insertDriverECR2DetailSerial", body)
+        APIHelper.postConfig("/logistics/insertDriverECRDetailSerial", body)
       );
 
       if (responseParam.status === 200) {
@@ -274,10 +274,10 @@ export const DriverECRDetail = () => {
 
                 <Space direction="vertical" size={4}>
                   <Title level={4} style={{ margin: 0, color: "#389e0d" }}>
-                    ECR Signed
+                    Driver ECR Signed
                   </Title>
                   <Text style={{ color: "#595959" }}>
-                    This ECR was Signed on{" "}
+                    This Driver ECR was Signed on{" "}
                     <strong>
                       {dayjs(data[0].SignatureDate).format("DD-MM-YY HH:mm")}
                       {/* {dayjs(DOData?.DeliveredDate).format("DD-MM-YY HH:mm")} */}
@@ -429,7 +429,7 @@ const SerialNoEditModal = ({
       };
 
       const responseParam = await AxiosWithLoading(
-        APIHelper.postConfig("/logistics/modifyDriverECR2Detail", body)
+        APIHelper.postConfig("/logistics/modifyDriverECRDetail", body)
       );
       if (responseParam.status === 200) {
         message.success(

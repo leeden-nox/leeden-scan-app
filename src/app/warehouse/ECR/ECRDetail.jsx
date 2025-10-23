@@ -6,7 +6,9 @@ import {
   EditOutlined,
   ExclamationCircleOutlined,
   KeyOutlined,
-  WarningOutlined
+  WarningOutlined,
+  BorderOutlined,
+  CheckSquareOutlined
 } from "@ant-design/icons";
 import {
   Button,
@@ -22,7 +24,8 @@ import {
   Table,
   Tooltip,
   Typography,
-  Result
+  Result,
+  Checkbox,
 } from "antd";
 import { useEffect, useRef, useState } from "react";
 import { useHistory, useParams } from "react-router-dom";
@@ -52,7 +55,13 @@ export const ECRDetail = () => {
   const [ecrStatusList, setEcrStatusList] = useState([]);
   const [ownerTypeList, setOwnerTypeList] = useState([]);
   const [showEditModal, setShowEditModal] = useState(false);
+  
+  const [selectedRowKeys, setSelectedRowKeys] = useState([]);
   const [selectedSerialNoObject, setSelectedSerialNoObject] = useState(null);
+  const [warehouse, setWarehouse] = useState(null);
+  const [warehouseList, setWarehouseList] = useState([]);
+  const [showUnverifiedOnly, setShowUnverifiedOnly] = useState(false);
+
   const getDriverECRDetailSerial = async () => {
     setIsLoading(true);
     try {
@@ -63,7 +72,7 @@ export const ECRDetail = () => {
         IsIssuedVerified: isIssuedVerified.id,
       };
       const responseParam = await AxiosWithLoading(
-        APIHelper.postConfig("/logistics/getDriverECR2DetailSerial", body)
+        APIHelper.postConfig("/logistics/getDriverECRDetailSerial", body)
       );
       setData(responseParam.data.Records.records);
       setTotalRecords(responseParam.data.TotalRecords.records[0]);
@@ -78,7 +87,7 @@ export const ECRDetail = () => {
       let body = {
         Module: "Logistics",
         ModuleAccessID: "4.8.4-1",
-        ParamList: "ECRRemarkList,ECRStatusList,OwnerTypeList",
+        ParamList: "ECRRemarkList,ECRStatusList,OwnerTypeList,Warehouse",
       };
       const responseParam = await AxiosWithLoading(
         APIHelper.postConfig("/common/ParameterData", body)
@@ -86,44 +95,55 @@ export const ECRDetail = () => {
       setEcrRemarkList(responseParam.data.ECRRemarkList);
       setEcrStatusList(responseParam.data.ECRStatusList);
       setOwnerTypeList(responseParam.data.OwnerTypeList);
+      setWarehouseList(responseParam.data.Warehouse.slice(1));
+
       setAuthorized(true);
     } catch (error) {
       let data = ErrorPrinter(error, history);
       setAuthorized(false);
     }
   };
-
-  const handleSubmit = async (barcode) => {
-    setIsLoading(true);
-    try {
-      let body = {
-        ECRNo: id,
-        SerialNo: barcode,
-      };
-
-      const responseParam = await AxiosWithLoading(
-        APIHelper.postConfig("/logistics/convertDriverECRVerifySerial", body)
-      );
-
-      if (responseParam.status === 200) {
-        message.success("Serial :" + barcode + " updated successfully");
-        await getDriverECRDetailSerial();
-        playSound();
-        return;
-      } else {
-        message.error("Serial :" + barcode + " updated failed");
-        playErrorSound();
-        return;
-      }
-    } catch (error) {
-      ErrorPrinter(error, history);
-      message.error("Serial :" + barcode + " updated failed");
-      playErrorSound();
-      return;
-    } finally {
-      setIsLoading(false);
-    }
+  const rowSelection = {
+    selectedRowKeys,
+    onChange: (newSelectedRowKeys) => {
+      setSelectedRowKeys(newSelectedRowKeys);
+    },
   };
+
+const handleSubmit = (barcode) => {
+  const trimmed = barcode.trim();
+
+  // find if serial exists in data
+  const record = data.find((record) => record.SerialNo === trimmed);
+
+  if (!record) {
+    message.error(`Serial ${trimmed} not found`);
+    playErrorSound();
+    return;
+  }
+  // check if already converted (IsOnSiteVerified is true)
+  if (record.OnSiteVerified) {
+    message.error(`Serial ${trimmed} is already converted`);
+    playErrorSound();
+    return;
+  }
+
+  // if serial found, check if already selected
+  const alreadySelected = rowSelection.selectedRowKeys.includes(trimmed);
+  if (alreadySelected) {
+    message.info(`Serial ${trimmed} already selected`);
+    playSound();
+    return;
+  }
+
+  // add to selection
+  const newKeys = [...rowSelection.selectedRowKeys, trimmed];
+  rowSelection.onChange(newKeys);
+
+  message.success(`Serial ${trimmed} selected`);
+  playSound();
+};
+
 
   const confirmLeave = () => {
     history.goBack();
@@ -139,31 +159,46 @@ export const ECRDetail = () => {
     fetchParamData();
   }, []);
 
-  const handleConvertDriverECR = async () => {
-    setIsLoading(true);
-    try {
-      let body = {
-        ECRNo: id,
-      };
-      const responseParam = await AxiosWithLoading(
-        APIHelper.postConfig("/logistics/convertDriverEcrToECR", body)
-      );
-      if (responseParam.status === 200) {
-        message.success("Driver ECR converted successfully");
-        getDriverECRDetailSerial();
-        return;
-      } else {
-        message.error("Driver ECR convert failed");
-        return;
-      }
+const handleConvertDriverECR = async () => {
+  if (!warehouse) {
+    message.warning("Please select a warehouse first");
+    return;
+  }
 
-    } catch (error) {
+  setIsLoading(true);
+  try {
+    const selectedSerialNos = data
+      .filter((record) =>
+        rowSelection.selectedRowKeys.includes(record.SerialNo)
+      )
+      .map((record) => record.SerialNo);
+
+    let body = {
+      ECR3No: id,
+      SerialNos: selectedSerialNos,
+      Warehouse: warehouse, // 👈 include warehouse in the payload
+    };
+
+    const responseParam = await AxiosWithLoading(
+      APIHelper.postConfig("/logistics/convertDriverEcrToECR", body)
+    );
+
+    if (responseParam.status === 200) {
+      message.success("Driver ECR converted successfully");
       getDriverECRDetailSerial();
-      ErrorPrinter(error, history);
-    } finally {
-      setIsLoading(false);
+    } else {
+      message.error("Driver ECR convert failed");
     }
-  };
+  } catch (error) {
+    getDriverECRDetailSerial();
+    ErrorPrinter(error, history);
+  } finally {
+    setIsLoading(false);
+  }
+};
+  const filteredData = showUnverifiedOnly
+  ? data.filter((record) => !record.OnSiteVerified)
+  : data;
 
   const columns = [
     {
@@ -243,35 +278,35 @@ export const ECRDetail = () => {
       </MobilePageShell>
     );
   }
-    if (data.length > 0 && data[0].ECRStatusID == 'C') {
+  if (data.length > 0 && data[0].ECRStatusID == "C") {
     return (
       <MobilePageShell title={"Driver ECR"} onBack={() => history.goBack()}>
         <Result
-      status="success"
-      title="Driver ECR Processed"
-      subTitle="The document has been successfully processed by the store."
-      extra={[
-        <Button type="primary" key="home" onClick={() => history.goBack()}>
-          Back to Home
-        </Button>,
-      ]}
-    />
+          status="success"
+          title="Driver ECR Processed"
+          subTitle="The document has been successfully processed by the store."
+          extra={[
+            <Button type="primary" key="home" onClick={() => history.goBack()}>
+              Back to Home
+            </Button>,
+          ]}
+        />
       </MobilePageShell>
     );
   }
-      if (data.length > 0 && data[0].ECRStatusID == 'D') {
+  if (data.length > 0 && data[0].ECRStatusID == "D") {
     return (
       <MobilePageShell title={"Driver ECR"} onBack={() => history.goBack()}>
         <Result
-      status="error"
-      title="Requires Manual Solve"
-      subTitle="Please use Operation LMS to solve."
-      extra={[
-        <Button type="primary" key="home" onClick={() => history.goBack()}>
-          Back to Home
-        </Button>
-      ]}
-    />
+          status="error"
+          title="Requires Manual Solve"
+          subTitle="Please use Operation LMS to solve."
+          extra={[
+            <Button type="primary" key="home" onClick={() => history.goBack()}>
+              Back to Home
+            </Button>,
+          ]}
+        />
       </MobilePageShell>
     );
   }
@@ -295,12 +330,28 @@ export const ECRDetail = () => {
         onBack={confirmLeave}
         onRefresh={getDriverECRDetailSerial}
         rightHeaderComponent={
+          <>
+          <Button
+            type="text"
+            icon={
+              showUnverifiedOnly ? <CheckSquareOutlined /> : <BorderOutlined />
+            }
+            title="Toggle Completed DO Filter"
+            onClick={() => setShowUnverifiedOnly(!showUnverifiedOnly)}
+            style={{
+              float: "right",
+              color: "#fff",
+              backgroundColor: showUnverifiedOnly ? "#377188" : "transparent",
+              border: "none",
+            }}
+          />
           <Button
             icon={<EditOutlined style={{ color: "#fff" }} />}
             onClick={() => setShowModal(true)}
             type="default"
             style={{ backgroundColor: "#377188", border: "none" }}
           />
+          </>
         }
       >
         {isLoading ? (
@@ -352,16 +403,179 @@ export const ECRDetail = () => {
                   </Col>
                 </Row>
 
-                <Table
-                  columns={columns}
-                  dataSource={data}
-                  rowKey="SerialNo"
-                  pagination={false}
-                  size="middle"
-                />
-                <Button onClick={handleConvertDriverECR}>
-                  Convert Driver ECR
-                </Button>
+                <div
+                  style={{ display: "flex", flexDirection: "column", gap: 8 }}
+                >
+                  {filteredData.map((record) => {
+                    const isSelected = rowSelection.selectedRowKeys.includes(
+                      record.SerialNo
+                    );
+
+                    return (
+                      <Card
+                        key={record.SerialNo}
+                        size="small"
+                        onClick={() => {
+                          // only allow selection toggle through scan, not tapping the card
+                          if (isSelected) {
+                            // allow deselect on tap
+                            const newKeys = rowSelection.selectedRowKeys.filter(
+                              (k) => k !== record.SerialNo
+                            );
+                            rowSelection.onChange(newKeys);
+                          }
+                        }}
+                        style={{
+                          border: isSelected
+                            ? "2px solid #1890ff"
+                            : "1px solid #f0f0f0",
+                          borderRadius: 12,
+                          cursor: isSelected ? "pointer" : "default",
+                          transition: "border 0.2s ease",
+                        }}
+                      >
+                        {/* Header: Serial No + Gas Type + Checkbox */}
+                        <div
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            marginBottom: 8,
+                          }}
+                        >
+                          <div>
+                            <div style={{ fontWeight: 600 }}>
+                              Serial No: {record.SerialNo}
+                            </div>
+                            <div style={{ color: "#888", fontSize: 13 }}>
+                              Gas Type: {record.GasTypeName || "—"}
+                            </div>
+                          </div>
+
+                          <Checkbox
+                            checked={isSelected}
+                            disabled={!isSelected} // disable if not selected
+                            onChange={(e) => {
+                              e.stopPropagation();
+                              if (!e.target.checked) {
+                                // allow only uncheck
+                                const newKeys =
+                                  rowSelection.selectedRowKeys.filter(
+                                    (k) => k !== record.SerialNo
+                                  );
+                                rowSelection.onChange(newKeys);
+                              }
+                            }}
+                          />
+                        </div>
+
+                        {/* Empty */}
+                        <div
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            padding: "2px 0",
+                          }}
+                        >
+                          <span>
+                            <b>Empty:</b>
+                          </span>
+                          {record.IsFullGasReturn ? (
+                            <Tooltip title="Full">
+                              <CloseCircleOutlined style={{ color: "red" }} />
+                            </Tooltip>
+                          ) : (
+                            <Tooltip title="Empty">
+                              <CheckCircleOutlined style={{ color: "green" }} />
+                            </Tooltip>
+                          )}
+                        </div>
+
+                        {/* Faulty */}
+                        <div
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            padding: "2px 0",
+                          }}
+                        >
+                          <span>
+                            <b>Faulty:</b>
+                          </span>
+                          {record.Remarks === "Faulty Container" ? (
+                            <Tooltip title="Faulty">
+                              <WarningOutlined style={{ color: "red" }} />
+                            </Tooltip>
+                          ) : (
+                            <Tooltip title="OK">
+                              <CheckCircleFilled style={{ color: "green" }} />
+                            </Tooltip>
+                          )}
+                        </div>
+
+                        {/* Converted */}
+                        <div
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            padding: "2px 0",
+                          }}
+                        >
+                          <span>
+                            <b>Converted:</b>
+                          </span>
+                          {record.OnSiteVerified ? (
+                            <Tooltip title="Converted">
+                              <CheckCircleOutlined style={{ color: "green" }} />
+                            </Tooltip>
+                          ) : (
+                            <Tooltip title="Not Converted">
+                              <CloseCircleOutlined style={{ color: "red" }} />
+                            </Tooltip>
+                          )}
+                        </div>
+
+                        {/* Edit Button */}
+                        <div style={{ marginTop: 8, textAlign: "right" }}>
+                          <Tooltip title="Edit">
+                            <Button
+                              type="text"
+                              icon={<EditOutlined />}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleEdit(record);
+                              }}
+                            />
+                          </Tooltip>
+                        </div>
+                      </Card>
+                    );
+                  })}
+                </div>
+
+<div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+<Select
+  placeholder="Select Warehouse"
+  value={warehouse}
+  onChange={setWarehouse}
+  style={{ width: 160 }}
+>
+  {warehouseList.map((wh) => (
+    <Option key={wh.id} value={wh.id}>
+      {wh.text}
+    </Option>
+  ))}
+</Select>
+
+  <Button
+    type="primary"
+    loading={isLoading}
+    onClick={handleConvertDriverECR}
+    disabled={!rowSelection.selectedRowKeys.length}
+  >
+    Convert to ECR2
+  </Button>
+</div>
               </Card>
             </div>
             <ScanListener onScanDetected={(barcode) => handleSubmit(barcode)} />
@@ -396,7 +610,7 @@ const SerialNoEditModal = ({
       console.log(body);
 
       const responseParam = await AxiosWithLoading(
-        APIHelper.postConfig("/logistics/modifyDriverECR2Detail", body)
+        APIHelper.postConfig("/logistics/modifyDriverECRDetail", body)
       );
       if (responseParam.status === 200) {
         message.success(
