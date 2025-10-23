@@ -185,6 +185,7 @@ const handleConvertDriverECR = async () => {
 
     if (responseParam.status === 200) {
       message.success("Driver ECR converted successfully");
+      setSelectedRowKeys([]);
       getDriverECRDetailSerial();
     } else {
       message.error("Driver ECR convert failed");
