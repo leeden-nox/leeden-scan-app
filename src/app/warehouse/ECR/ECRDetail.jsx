@@ -8,7 +8,7 @@ import {
   KeyOutlined,
   WarningOutlined,
   BorderOutlined,
-  CheckSquareOutlined
+  CheckSquareOutlined,
 } from "@ant-design/icons";
 import {
   Button,
@@ -55,12 +55,13 @@ export const ECRDetail = () => {
   const [ecrStatusList, setEcrStatusList] = useState([]);
   const [ownerTypeList, setOwnerTypeList] = useState([]);
   const [showEditModal, setShowEditModal] = useState(false);
-  
+
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
   const [selectedSerialNoObject, setSelectedSerialNoObject] = useState(null);
   const [warehouse, setWarehouse] = useState(null);
   const [warehouseList, setWarehouseList] = useState([]);
   const [showUnverifiedOnly, setShowUnverifiedOnly] = useState(false);
+  const [driverECRFaultyReasons, setDriverECRFaultyReasons] = useState([]);
 
   const getDriverECRDetailSerial = async () => {
     setIsLoading(true);
@@ -87,7 +88,8 @@ export const ECRDetail = () => {
       let body = {
         Module: "Logistics",
         ModuleAccessID: "4.8.4-1",
-        ParamList: "ECRRemarkList,ECRStatusList,OwnerTypeList,Warehouse",
+        ParamList:
+          "ECRRemarkList,ECRStatusList,OwnerTypeList,Warehouse,DriverECRFaultyReasons",
       };
       const responseParam = await AxiosWithLoading(
         APIHelper.postConfig("/common/ParameterData", body)
@@ -96,7 +98,7 @@ export const ECRDetail = () => {
       setEcrStatusList(responseParam.data.ECRStatusList);
       setOwnerTypeList(responseParam.data.OwnerTypeList);
       setWarehouseList(responseParam.data.Warehouse.slice(1));
-
+      setDriverECRFaultyReasons(responseParam.data.DriverECRFaultyReasons);
       setAuthorized(true);
     } catch (error) {
       let data = ErrorPrinter(error, history);
@@ -110,40 +112,39 @@ export const ECRDetail = () => {
     },
   };
 
-const handleSubmit = (barcode) => {
-  const trimmed = barcode.trim();
+  const handleSubmit = (barcode) => {
+    const trimmed = barcode.trim();
 
-  // find if serial exists in data
-  const record = data.find((record) => record.SerialNo === trimmed);
+    // find if serial exists in data
+    const record = data.find((record) => record.SerialNo === trimmed);
 
-  if (!record) {
-    message.error(`Serial ${trimmed} not found`);
-    playErrorSound();
-    return;
-  }
-  // check if already converted (IsOnSiteVerified is true)
-  if (record.OnSiteVerified) {
-    message.error(`Serial ${trimmed} is already converted`);
-    playErrorSound();
-    return;
-  }
+    if (!record) {
+      message.error(`Serial ${trimmed} not found`);
+      playErrorSound();
+      return;
+    }
+    // check if already converted (IsOnSiteVerified is true)
+    if (record.OnSiteVerified) {
+      message.error(`Serial ${trimmed} is already converted`);
+      playErrorSound();
+      return;
+    }
 
-  // if serial found, check if already selected
-  const alreadySelected = rowSelection.selectedRowKeys.includes(trimmed);
-  if (alreadySelected) {
-    message.info(`Serial ${trimmed} already selected`);
+    // if serial found, check if already selected
+    const alreadySelected = rowSelection.selectedRowKeys.includes(trimmed);
+    if (alreadySelected) {
+      message.info(`Serial ${trimmed} already selected`);
+      playSound();
+      return;
+    }
+
+    // add to selection
+    const newKeys = [...rowSelection.selectedRowKeys, trimmed];
+    rowSelection.onChange(newKeys);
+
+    message.success(`Serial ${trimmed} selected`);
     playSound();
-    return;
-  }
-
-  // add to selection
-  const newKeys = [...rowSelection.selectedRowKeys, trimmed];
-  rowSelection.onChange(newKeys);
-
-  message.success(`Serial ${trimmed} selected`);
-  playSound();
-};
-
+  };
 
   const confirmLeave = () => {
     history.goBack();
@@ -159,47 +160,47 @@ const handleSubmit = (barcode) => {
     fetchParamData();
   }, []);
 
-const handleConvertDriverECR = async () => {
-  if (!warehouse) {
-    message.warning("Please select a warehouse first");
-    return;
-  }
-
-  setIsLoading(true);
-  try {
-    const selectedSerialNos = data
-      .filter((record) =>
-        rowSelection.selectedRowKeys.includes(record.SerialNo)
-      )
-      .map((record) => record.SerialNo);
-
-    let body = {
-      ECR3No: id,
-      SerialNos: selectedSerialNos,
-      Warehouse: warehouse, // 👈 include warehouse in the payload
-    };
-
-    const responseParam = await AxiosWithLoading(
-      APIHelper.postConfig("/logistics/convertDriverEcrToECR", body)
-    );
-
-    if (responseParam.status === 200) {
-      message.success("Driver ECR converted successfully");
-      setSelectedRowKeys([]);
-      getDriverECRDetailSerial();
-    } else {
-      message.error("Driver ECR convert failed");
+  const handleConvertDriverECR = async () => {
+    if (!warehouse) {
+      message.warning("Please select a warehouse first");
+      return;
     }
-  } catch (error) {
-    getDriverECRDetailSerial();
-    ErrorPrinter(error, history);
-  } finally {
-    setIsLoading(false);
-  }
-};
+
+    setIsLoading(true);
+    try {
+      const selectedSerialNos = data
+        .filter((record) =>
+          rowSelection.selectedRowKeys.includes(record.SerialNo)
+        )
+        .map((record) => record.SerialNo);
+
+      let body = {
+        ECR3No: id,
+        SerialNos: selectedSerialNos,
+        Warehouse: warehouse, // 👈 include warehouse in the payload
+      };
+
+      const responseParam = await AxiosWithLoading(
+        APIHelper.postConfig("/logistics/convertDriverEcrToECR", body)
+      );
+
+      if (responseParam.status === 200) {
+        message.success("Driver ECR converted successfully");
+        setSelectedRowKeys([]);
+        getDriverECRDetailSerial();
+      } else {
+        message.error("Driver ECR convert failed");
+      }
+    } catch (error) {
+      getDriverECRDetailSerial();
+      ErrorPrinter(error, history);
+    } finally {
+      setIsLoading(false);
+    }
+  };
   const filteredData = showUnverifiedOnly
-  ? data.filter((record) => !record.OnSiteVerified)
-  : data;
+    ? data.filter((record) => !record.OnSiteVerified)
+    : data;
 
   const columns = [
     {
@@ -332,26 +333,30 @@ const handleConvertDriverECR = async () => {
         onRefresh={getDriverECRDetailSerial}
         rightHeaderComponent={
           <>
-          <Button
-            type="text"
-            icon={
-              showUnverifiedOnly ? <CheckSquareOutlined /> : <BorderOutlined />
-            }
-            title="Toggle Completed DO Filter"
-            onClick={() => setShowUnverifiedOnly(!showUnverifiedOnly)}
-            style={{
-              float: "right",
-              color: "#fff",
-              backgroundColor: showUnverifiedOnly ? "#377188" : "transparent",
-              border: "none",
-            }}
-          />
-          <Button
-            icon={<EditOutlined style={{ color: "#fff" }} />}
-            onClick={() => setShowModal(true)}
-            type="default"
-            style={{ backgroundColor: "#377188", border: "none" }}
-          />
+            <Button
+              type="text"
+              icon={
+                showUnverifiedOnly ? (
+                  <CheckSquareOutlined />
+                ) : (
+                  <BorderOutlined />
+                )
+              }
+              title="Toggle Completed DO Filter"
+              onClick={() => setShowUnverifiedOnly(!showUnverifiedOnly)}
+              style={{
+                float: "right",
+                color: "#fff",
+                backgroundColor: showUnverifiedOnly ? "#377188" : "transparent",
+                border: "none",
+              }}
+            />
+            <Button
+              icon={<EditOutlined style={{ color: "#fff" }} />}
+              onClick={() => setShowModal(true)}
+              type="default"
+              style={{ backgroundColor: "#377188", border: "none" }}
+            />
           </>
         }
       >
@@ -375,6 +380,7 @@ const handleConvertDriverECR = async () => {
                 RemarkList={ecrRemarkList}
                 StatusList={ecrStatusList}
                 onRefresh={getDriverECRDetailSerial}
+                driverECRFaultyReasons={driverECRFaultyReasons}
               />
               <SpinLoading />
 
@@ -554,29 +560,29 @@ const handleConvertDriverECR = async () => {
                   })}
                 </div>
 
-<div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-<Select
-  placeholder="Select Warehouse"
-  value={warehouse}
-  onChange={setWarehouse}
-  style={{ width: 160 }}
->
-  {warehouseList.map((wh) => (
-    <Option key={wh.id} value={wh.id}>
-      {wh.text}
-    </Option>
-  ))}
-</Select>
+                <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                  <Select
+                    placeholder="Select Warehouse"
+                    value={warehouse}
+                    onChange={setWarehouse}
+                    style={{ width: 160 }}
+                  >
+                    {warehouseList.map((wh) => (
+                      <Option key={wh.id} value={wh.id}>
+                        {wh.text}
+                      </Option>
+                    ))}
+                  </Select>
 
-  <Button
-    type="primary"
-    loading={isLoading}
-    onClick={handleConvertDriverECR}
-    disabled={!rowSelection.selectedRowKeys.length}
-  >
-    Convert to ECR2
-  </Button>
-</div>
+                  <Button
+                    type="primary"
+                    loading={isLoading}
+                    onClick={handleConvertDriverECR}
+                    disabled={!rowSelection.selectedRowKeys.length}
+                  >
+                    Convert to ECR2
+                  </Button>
+                </div>
               </Card>
             </div>
             <ScanListener onScanDetected={(barcode) => handleSubmit(barcode)} />
@@ -594,9 +600,10 @@ const SerialNoEditModal = ({
   RemarkList,
   StatusList,
   onRefresh,
+  driverECRFaultyReasons,
 }) => {
   const [form] = Form.useForm();
-
+    const [selectedRemark, setSelectedRemark] = useState(null);
   const handleFinish = async (values) => {
     console.log(values);
     console.log(selectedSerialObject);
@@ -607,6 +614,7 @@ const SerialNoEditModal = ({
         SerialNo: selectedSerialObject.SerialNo,
         IsFullGasReturn: values.status == "1" ? true : false,
         Remarks: values.remark,
+        FaultyReason: values.faultyReason || "",
       };
       console.log(body);
 
@@ -638,7 +646,9 @@ const SerialNoEditModal = ({
       form.setFieldsValue({
         remark: selectedSerialObject.Remarks || "",
         status: selectedSerialObject.IsFullGasReturn ? "1" : "0",
+        faultyReason: selectedSerialObject.QRRemark || null,
       });
+      setSelectedRemark(selectedSerialObject.Remarks || null);
     }
   }, [visible, selectedSerialObject, form]);
 
@@ -652,7 +662,16 @@ const SerialNoEditModal = ({
       }}
       footer={null}
     >
-      <Form form={form} layout="vertical" onFinish={handleFinish}>
+      <Form
+        form={form}
+        layout="vertical"
+        onFinish={handleFinish}
+        onValuesChange={(changedValues) => {
+          if (changedValues.remark !== undefined) {
+            setSelectedRemark(changedValues.remark);
+          }
+        }}
+      >
         <Form.Item label="Faulty?" name="remark">
           <Select placeholder="Select Remark">
             {RemarkList.map(({ id, text }) => (
@@ -662,7 +681,23 @@ const SerialNoEditModal = ({
             ))}
           </Select>
         </Form.Item>
-
+        {selectedRemark === "Faulty Container" && (
+          <Form.Item
+            label="Reason for Faulty"
+            name="faultyReason"
+            rules={[
+              { required: true, message: "Please select a faulty reason" },
+            ]}
+          >
+            <Select placeholder="Select Faulty Reason">
+              {driverECRFaultyReasons.map(({ id, text }) => (
+                <Select.Option key={id} value={text}>
+                  {text}
+                </Select.Option>
+              ))}
+            </Select>
+          </Form.Item>
+        )}
         <Form.Item
           label="Cylinder Status"
           name="status"

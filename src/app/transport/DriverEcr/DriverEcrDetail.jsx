@@ -8,7 +8,7 @@ import {
   ExclamationCircleOutlined,
   KeyOutlined,
   WarningOutlined,
-  EyeOutlined
+  EyeOutlined,
 } from "@ant-design/icons";
 import {
   Button,
@@ -25,7 +25,7 @@ import {
   Table,
   Tooltip,
   Typography,
-  Tag
+  Tag,
 } from "antd";
 import { useEffect, useRef, useState } from "react";
 import { useHistory, useParams } from "react-router-dom";
@@ -44,7 +44,7 @@ import SignaturePadJpeg from "../../../constants/SignaturePadJpeg";
 import UnauthorizedPage from "../../../constants/Unauthorized";
 import SignaturePreviewModal from "../../../constants/SignaturePreviewModal";
 import dayjs from "dayjs";
-const { Text,Title } = Typography;
+const { Text, Title } = Typography;
 export const DriverECRDetail = () => {
   const [showModal, setShowModal] = useState(false);
   const history = useHistory();
@@ -60,7 +60,7 @@ export const DriverECRDetail = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedSerialNoObject, setSelectedSerialNoObject] = useState(null);
   const [visibleSignatureModal, setVisibleSignatureModal] = useState(false);
-  const [signatureBase64, setSignatureBase64] = useState(null);
+  const [driverECRFaultyReasons, setDriverECRFaultyReasons] = useState([]);
   const getDriverECRDetailSerial = async () => {
     setIsLoading(true);
     try {
@@ -86,7 +86,8 @@ export const DriverECRDetail = () => {
       let body = {
         Module: "Logistics",
         ModuleAccessID: "4.8.3-1",
-        ParamList: "ECRRemarkList,ECRStatusList,OwnerTypeList",
+        ParamList:
+          "ECRRemarkList,ECRStatusList,OwnerTypeList,DriverECRFaultyReasons",
       };
       const responseParam = await AxiosWithLoading(
         APIHelper.postConfig("/common/ParameterData", body)
@@ -94,6 +95,7 @@ export const DriverECRDetail = () => {
       setEcrRemarkList(responseParam.data.ECRRemarkList);
       setEcrStatusList(responseParam.data.ECRStatusList);
       setOwnerTypeList(responseParam.data.OwnerTypeList);
+      setDriverECRFaultyReasons(responseParam.data.DriverECRFaultyReasons);
       setAuthorized(true);
     } catch (error) {
       let data = ErrorPrinter(error, history);
@@ -244,70 +246,70 @@ export const DriverECRDetail = () => {
   if (data.length > 0 && data[0].SignatureImageBlob != null) {
     return (
       <MobilePageShell title={"Driver ECR"} onBack={() => history.goBack()}>
-          <>
+        <>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              minHeight: "60vh", // vertical centering
+              padding: "2rem",
+            }}
+          >
             <div
               style={{
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                minHeight: "60vh", // vertical centering
+                backgroundColor: "#f6ffed",
+                border: "1px solid #b7eb8f",
+                borderRadius: 12,
                 padding: "2rem",
+                maxWidth: 600,
+                width: "100%",
+                boxShadow: "0 2px 8px rgba(0, 0, 0, 0.05)",
+                display: "flex",
+                alignItems: "center",
+                gap: 16,
               }}
             >
-              <div
-                style={{
-                  backgroundColor: "#f6ffed",
-                  border: "1px solid #b7eb8f",
-                  borderRadius: 12,
-                  padding: "2rem",
-                  maxWidth: 600,
-                  width: "100%",
-                  boxShadow: "0 2px 8px rgba(0, 0, 0, 0.05)",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 16,
-                }}
-              >
-                <CheckCircleOutlined
-                  style={{ fontSize: "2em", color: "#52c41a" }}
-                />
-
-                <Space direction="vertical" size={4}>
-                  <Title level={4} style={{ margin: 0, color: "#389e0d" }}>
-                    Driver ECR Signed
-                  </Title>
-                  <Text style={{ color: "#595959" }}>
-                    This Driver ECR was Signed on{" "}
-                    <strong>
-                      {dayjs(data[0].SignatureDate).format("DD-MM-YY HH:mm")}
-                      {/* {dayjs(DOData?.DeliveredDate).format("DD-MM-YY HH:mm")} */}
-                    </strong>
-                    .
-                  </Text>
-                  <Tag color="green">Signed</Tag>
-                  <Button
-                    type="primary"
-                    icon={<EyeOutlined />}
-                    size="middle"
-                    style={{
-                      marginTop: 8,
-                      backgroundColor: "#389e0d",
-                      borderColor: "#389e0d",
-                      alignSelf: "flex-start",
-                    }}
-                      onClick={() => setVisibleSignatureModal(true)}
-                  >
-                    View Signature
-                  </Button>
-                </Space>
-              </div>
-              <SignaturePreviewModal
-                visible={visibleSignatureModal}
-                setVisible={setVisibleSignatureModal}
-                base64String={data[0].SignatureImageBlob}
+              <CheckCircleOutlined
+                style={{ fontSize: "2em", color: "#52c41a" }}
               />
+
+              <Space direction="vertical" size={4}>
+                <Title level={4} style={{ margin: 0, color: "#389e0d" }}>
+                  Driver ECR Signed
+                </Title>
+                <Text style={{ color: "#595959" }}>
+                  This Driver ECR was Signed on{" "}
+                  <strong>
+                    {dayjs(data[0].SignatureDate).format("DD-MM-YY HH:mm")}
+                    {/* {dayjs(DOData?.DeliveredDate).format("DD-MM-YY HH:mm")} */}
+                  </strong>
+                  .
+                </Text>
+                <Tag color="green">Signed</Tag>
+                <Button
+                  type="primary"
+                  icon={<EyeOutlined />}
+                  size="middle"
+                  style={{
+                    marginTop: 8,
+                    backgroundColor: "#389e0d",
+                    borderColor: "#389e0d",
+                    alignSelf: "flex-start",
+                  }}
+                  onClick={() => setVisibleSignatureModal(true)}
+                >
+                  View Signature
+                </Button>
+              </Space>
             </div>
-          </>
+            <SignaturePreviewModal
+              visible={visibleSignatureModal}
+              setVisible={setVisibleSignatureModal}
+              base64String={data[0].SignatureImageBlob}
+            />
+          </div>
+        </>
       </MobilePageShell>
     );
   }
@@ -362,6 +364,7 @@ export const DriverECRDetail = () => {
                 RemarkList={ecrRemarkList}
                 StatusList={ecrStatusList}
                 onRefresh={getDriverECRDetailSerial}
+                driverECRFaultyReasons={driverECRFaultyReasons}
               />
               <SpinLoading />
 
@@ -415,9 +418,10 @@ const SerialNoEditModal = ({
   RemarkList,
   StatusList,
   onRefresh,
+  driverECRFaultyReasons,
 }) => {
   const [form] = Form.useForm();
-
+  const [selectedRemark, setSelectedRemark] = useState(null);
   const handleFinish = async (values) => {
     onClose();
     try {
@@ -426,6 +430,7 @@ const SerialNoEditModal = ({
         SerialNo: selectedSerialObject.SerialNo,
         IsFullGasReturn: values.status == "1" ? true : false,
         Remarks: values.remark,
+        FaultyReason: values.faultyReason || "",
       };
 
       const responseParam = await AxiosWithLoading(
@@ -456,7 +461,9 @@ const SerialNoEditModal = ({
       form.setFieldsValue({
         remark: selectedSerialObject.Remarks || "",
         status: selectedSerialObject.IsFullGasReturn ? "1" : "0",
+        faultyReason: selectedSerialObject.QRRemark || null,
       });
+      setSelectedRemark(selectedSerialObject.Remarks || null);
     }
   }, [visible, selectedSerialObject, form]);
 
@@ -470,7 +477,16 @@ const SerialNoEditModal = ({
       }}
       footer={null}
     >
-      <Form form={form} layout="vertical" onFinish={handleFinish}>
+      <Form
+        form={form}
+        layout="vertical"
+        onFinish={handleFinish}
+        onValuesChange={(changedValues) => {
+          if (changedValues.remark !== undefined) {
+            setSelectedRemark(changedValues.remark);
+          }
+        }}
+      >
         <Form.Item label="Faulty?" name="remark">
           <Select placeholder="Select Remark">
             {RemarkList.map(({ id, text }) => (
@@ -480,7 +496,23 @@ const SerialNoEditModal = ({
             ))}
           </Select>
         </Form.Item>
-
+        {selectedRemark === "Faulty Container" && (
+          <Form.Item
+            label="Reason for Faulty"
+            name="faultyReason"
+            rules={[
+              { required: true, message: "Please select a faulty reason" },
+            ]}
+          >
+            <Select placeholder="Select Faulty Reason">
+              {driverECRFaultyReasons.map(({ id, text }) => (
+                <Select.Option key={id} value={text}>
+                  {text}
+                </Select.Option>
+              ))}
+            </Select>
+          </Form.Item>
+        )}
         <Form.Item
           label="Cylinder Status"
           name="status"
