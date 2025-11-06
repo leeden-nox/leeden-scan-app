@@ -249,7 +249,7 @@ export const PickListQtyDetailPick = () => {
       }
     }
     else if (data[0].TrackedBySerial) {
-      const matchedSerial = serialList.find((item) => item.SerialNo === barcode);
+      const matchedSerial = serialList.find((item) => item.Serial === barcode);
       if (matchedSerial) {
         setSelectedSerial(matchedSerial);
         playSound();
