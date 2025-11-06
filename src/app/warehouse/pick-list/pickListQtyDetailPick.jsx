@@ -916,6 +916,8 @@ const BatchSerialModal = ({
   setSelected,
   isBatch = true
 }) => {
+  const [search, setSearch] = useState("");
+
   const handleSelect = (detail) => {
     setSelected(detail);
     onClose();
@@ -931,6 +933,7 @@ const BatchSerialModal = ({
         }
       >
         <SpinLoading />
+        <Input placeholder="Search Batch/Serial" value={search} onChange={(e) => setSearch(e.target.value)} />
         <Card style={{ marginBottom: 16, backgroundColor: "#f4f6f8" }}>
           <div
             style={{
@@ -952,7 +955,7 @@ const BatchSerialModal = ({
           </div>
         </Card>
 
-        {list.map((detail, index) => (
+        {list.filter(item => item.BatchNo.toLowerCase().includes(search) || item.Serial.toLowerCase().includes(search)).map((detail, index) => (
           <Card
             key={index}
             style={{ marginBottom: 16 }}
