@@ -933,7 +933,7 @@ const BatchSerialModal = ({
         }
       >
         <SpinLoading />
-        <Input placeholder="Search Batch/Serial" value={search} onChange={(e) => setSearch(e.target.value)} />
+        <Input className="m-2" style={{width:'95vw'}} placeholder="Search Batch/Serial" value={search} onChange={(e) => setSearch(e.target.value)} />
         <Card style={{ marginBottom: 16, backgroundColor: "#f4f6f8" }}>
           <div
             style={{
