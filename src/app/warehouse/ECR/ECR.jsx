@@ -61,7 +61,7 @@ export const ECR = () => {
   const [totalRecords, setTotalRecords] = useState({});
   const [warehouse, setWarehouse] = useState(null);
   const [warehouseList, setWarehouseList] = useState([]);
-  const [showUnverifiedOnly, setShowUnverifiedOnly] = useState(false);
+  const [showUnverifiedOnly, setShowUnverifiedOnly] = useState(true);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [selectedSerialNosList, setSelectedSerialNosList] = useState([]);
   const [showConvertResultModal, setShowConvertResultModal] = useState(false);
@@ -284,6 +284,41 @@ export const ECR = () => {
             />
           </div>
           <>
+            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              <Select
+                placeholder="Select Warehouse"
+                value={warehouse}
+                onChange={setWarehouse}
+                style={{ width: 160 }}
+              >
+                {warehouseList.map((wh) => (
+                  <Option key={wh.id} value={wh.id}>
+                    {wh.text}
+                  </Option>
+                ))}
+              </Select>
+
+              <Button
+                type="primary"
+                loading={isLoading}
+                style={{
+                  whiteSpace: "normal",
+                  height: "auto",
+                  lineHeight: "20px",
+                  width: 90, // adjust width until it wraps nicely
+                }}
+                onClick={() => {
+                  const selectedSerialNos = data.filter((record) =>
+                    rowSelection.selectedRowKeys.includes(record.SerialNo)
+                  );
+                  setSelectedSerialNosList(selectedSerialNos);
+                  setShowConfirmModal(true);
+                }}
+                disabled={!rowSelection.selectedRowKeys.length}
+              >
+                Convert to ECR
+              </Button>
+            </div>
             <div style={{ padding: "16px" }}>
               <SerialNoEntryModal
                 showModal={showModal}
@@ -469,42 +504,6 @@ export const ECR = () => {
                     );
                   })}
                 </div>
-
-                <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                  <Select
-                    placeholder="Select Warehouse"
-                    value={warehouse}
-                    onChange={setWarehouse}
-                    style={{ width: 160 }}
-                  >
-                    {warehouseList.map((wh) => (
-                      <Option key={wh.id} value={wh.id}>
-                        {wh.text}
-                      </Option>
-                    ))}
-                  </Select>
-
-                  <Button
-                    type="primary"
-                    loading={isLoading}
-                    style={{
-                      whiteSpace: "normal",
-                      height: "auto",
-                      lineHeight: "20px",
-                      width: 90, // adjust width until it wraps nicely
-                    }}
-                    onClick={() => {
-                      const selectedSerialNos = data.filter((record) =>
-                        rowSelection.selectedRowKeys.includes(record.SerialNo)
-                      );
-                      setSelectedSerialNosList(selectedSerialNos);
-                      setShowConfirmModal(true);
-                    }}
-                    disabled={!rowSelection.selectedRowKeys.length}
-                  >
-                    Convert to ECR
-                  </Button>
-                </div>
               </Card>
             </div>
             <ScanListener onScanDetected={(barcode) => handleSubmit(barcode)} />
@@ -594,8 +593,8 @@ const SerialNoEditModal = ({
   driverECRFaultyReasons,
 }) => {
   const [form] = Form.useForm();
-    const [selectedRemark, setSelectedRemark] = useState(null);
-    const [remarkText, setRemarkText] = useState("");
+  const [selectedRemark, setSelectedRemark] = useState(null);
+  const [remarkText, setRemarkText] = useState("");
   const handleFinish = async (values) => {
     console.log(values);
     console.log(selectedSerialObject);
@@ -606,10 +605,10 @@ const SerialNoEditModal = ({
         SerialNo: selectedSerialObject.SerialNo,
         IsFullGasReturn: values.status == "1" ? true : false,
         Remarks: values.remark,
-          FaultyReason:
-    values.faultyReason === "Others"
-      ? values.otherFaultyReason || ""
-      : values.faultyReason || "",
+        FaultyReason:
+          values.faultyReason === "Others"
+            ? values.otherFaultyReason || ""
+            : values.faultyReason || "",
       };
       console.log(body);
 
@@ -644,7 +643,7 @@ const SerialNoEditModal = ({
         faultyReason: selectedSerialObject.QRRemark || null,
       });
       setSelectedRemark(selectedSerialObject.Remarks || null);
-      setRemarkText(selectedSerialObject.QRRemark || null)
+      setRemarkText(selectedSerialObject.QRRemark || null);
     }
   }, [visible, selectedSerialObject, form]);
 
@@ -701,15 +700,11 @@ const SerialNoEditModal = ({
           <Form.Item
             label="Please specify other reason"
             name="otherFaultyReason"
-            rules={[
-              { required: true, message: "Please specify other reason" },
-            ]}
+            rules={[{ required: true, message: "Please specify other reason" }]}
           >
             <Input placeholder="Specify other faulty reason" />
           </Form.Item>
-        )
-
-        }
+        )}
         <Form.Item
           label="Cylinder Status"
           name="status"

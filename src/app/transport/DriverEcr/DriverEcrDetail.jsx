@@ -474,8 +474,11 @@ const SerialNoEditModal = ({
   driverECRFaultyReasons,
 }) => {
   const [form] = Form.useForm();
-  const [selectedRemark, setSelectedRemark] = useState(null);
+    const [selectedRemark, setSelectedRemark] = useState(null);
+    const [remarkText, setRemarkText] = useState("");
   const handleFinish = async (values) => {
+    console.log(values);
+    console.log(selectedSerialObject);
     onClose();
     try {
       const body = {
@@ -483,8 +486,12 @@ const SerialNoEditModal = ({
         SerialNo: selectedSerialObject.SerialNo,
         IsFullGasReturn: values.status == "1" ? true : false,
         Remarks: values.remark,
-        FaultyReason: values.faultyReason || "",
+          FaultyReason:
+    values.faultyReason === "Others"
+      ? values.otherFaultyReason || ""
+      : values.faultyReason || "",
       };
+      console.log(body);
 
       const responseParam = await AxiosWithLoading(
         APIHelper.postConfig("/logistics/modifyDriverECRDetail", body)
@@ -517,6 +524,7 @@ const SerialNoEditModal = ({
         faultyReason: selectedSerialObject.QRRemark || null,
       });
       setSelectedRemark(selectedSerialObject.Remarks || null);
+      setRemarkText(selectedSerialObject.QRRemark || null)
     }
   }, [visible, selectedSerialObject, form]);
 
@@ -537,6 +545,9 @@ const SerialNoEditModal = ({
         onValuesChange={(changedValues) => {
           if (changedValues.remark !== undefined) {
             setSelectedRemark(changedValues.remark);
+          }
+          if (changedValues.faultyReason !== undefined) {
+            setRemarkText(changedValues.faultyReason);
           }
         }}
       >
@@ -566,6 +577,19 @@ const SerialNoEditModal = ({
             </Select>
           </Form.Item>
         )}
+        {remarkText === "Others" && (
+          <Form.Item
+            label="Please specify other reason"
+            name="otherFaultyReason"
+            rules={[
+              { required: true, message: "Please specify other reason" },
+            ]}
+          >
+            <Input placeholder="Specify other faulty reason" />
+          </Form.Item>
+        )
+
+        }
         <Form.Item
           label="Cylinder Status"
           name="status"
