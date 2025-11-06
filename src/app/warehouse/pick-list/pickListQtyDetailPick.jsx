@@ -955,7 +955,7 @@ const BatchSerialModal = ({
           </div>
         </Card>
 
-        {list.filter(item => item.BatchNo.toLowerCase().includes(search) || item.Serial.toLowerCase().includes(search)).map((detail, index) => (
+        {list.filter(item => (item.BatchNo || '').toLowerCase().includes(search) || (item.Serial || '').toLowerCase().includes(search)).map((detail, index) => (
           <Card
             key={index}
             style={{ marginBottom: 16 }}
