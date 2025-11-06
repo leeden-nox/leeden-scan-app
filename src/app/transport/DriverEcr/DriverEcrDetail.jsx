@@ -61,6 +61,7 @@ export const DriverECRDetail = () => {
   const [selectedSerialNoObject, setSelectedSerialNoObject] = useState(null);
   const [visibleSignatureModal, setVisibleSignatureModal] = useState(false);
   const [driverECRFaultyReasons, setDriverECRFaultyReasons] = useState([]);
+  const [physicalECRNo, setPhysicalECRNo] = useState("");
   const getDriverECRDetailSerial = async () => {
     setIsLoading(true);
     try {
@@ -74,6 +75,9 @@ export const DriverECRDetail = () => {
         APIHelper.postConfig("/logistics/getDriverECRDetailSerial", body)
       );
       setData(responseParam.data.Records.records);
+      if(responseParam.data.Records.records.length > 0){
+        setPhysicalECRNo(responseParam.data.Records.records[0].PhysicalECRNo || "");
+      }
       setTotalRecords(responseParam.data.TotalRecords.records[0]);
     } catch (error) {
       ErrorPrinter(error, history);
@@ -171,6 +175,38 @@ export const DriverECRDetail = () => {
     setSelectedSerialNoObject({ ...record, ECRNo: id });
   };
 
+  const handleAssignPhysicalECRNo = async (value) => {
+    setIsLoading(true);
+    try {
+      let body = {
+        ECRNo: id,
+        PhysicalECRNo: value,
+      };
+
+      const responseParam = await AxiosWithLoading(
+        APIHelper.postConfig("/logistics/setPhysicalECRNoByECRNo", body)
+      );
+
+      if (responseParam.status === 200) {
+        message.success("Physical ECR No :" + value + " updated successfully");
+        await getDriverECRDetailSerial();
+        playSound();
+        return;
+      } else {
+        message.error("Physical ECR No :" + value + " updated failed");
+        playErrorSound();
+        return;
+      }
+    } catch (error) {
+      ErrorPrinter(error, history);
+      message.error("Physical ECR No :" + value + " updated failed");
+      playErrorSound();
+      return;
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
   useEffect(() => {
     getDriverECRDetailSerial();
     fetchParamData();
@@ -246,70 +282,87 @@ export const DriverECRDetail = () => {
   if (data.length > 0 && data[0].SignatureImageBlob != null) {
     return (
       <MobilePageShell title={"Driver ECR"} onBack={() => history.goBack()}>
-        <>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              minHeight: "60vh", // vertical centering
-              padding: "2rem",
-            }}
-          >
-            <div
-              style={{
-                backgroundColor: "#f6ffed",
-                border: "1px solid #b7eb8f",
-                borderRadius: 12,
-                padding: "2rem",
-                maxWidth: 600,
-                width: "100%",
-                boxShadow: "0 2px 8px rgba(0, 0, 0, 0.05)",
-                display: "flex",
-                alignItems: "center",
-                gap: 16,
-              }}
-            >
-              <CheckCircleOutlined
-                style={{ fontSize: "2em", color: "#52c41a" }}
-              />
+<>
+  <div
+    style={{
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+      minHeight: "60vh",
+      padding: "2rem",
+    }}
+  >
+    <div
+      style={{
+        backgroundColor: "#f6ffed",
+        border: "1px solid #b7eb8f",
+        borderRadius: 12,
+        padding: "2rem",
+        maxWidth: 600,
+        width: "100%",
+        boxShadow: "0 2px 8px rgba(0, 0, 0, 0.05)",
+        display: "flex",
+        alignItems: "center",
+        gap: 16,
+      }}
+    >
+      <CheckCircleOutlined style={{ fontSize: "2em", color: "#52c41a" }} />
 
-              <Space direction="vertical" size={4}>
-                <Title level={4} style={{ margin: 0, color: "#389e0d" }}>
-                  Driver ECR Signed
-                </Title>
-                <Text style={{ color: "#595959" }}>
-                  This Driver ECR was Signed on{" "}
-                  <strong>
-                    {dayjs(data[0].SignatureDate).format("DD-MM-YY HH:mm")}
-                    {/* {dayjs(DOData?.DeliveredDate).format("DD-MM-YY HH:mm")} */}
-                  </strong>
-                  .
-                </Text>
-                <Tag color="green">Signed</Tag>
-                <Button
-                  type="primary"
-                  icon={<EyeOutlined />}
-                  size="middle"
-                  style={{
-                    marginTop: 8,
-                    backgroundColor: "#389e0d",
-                    borderColor: "#389e0d",
-                    alignSelf: "flex-start",
-                  }}
-                  onClick={() => setVisibleSignatureModal(true)}
-                >
-                  View Signature
-                </Button>
-              </Space>
-            </div>
-            <SignaturePreviewModal
-              visible={visibleSignatureModal}
-              setVisible={setVisibleSignatureModal}
-              base64String={data[0].SignatureImageBlob}
-            />
-          </div>
-        </>
+      <Space direction="vertical" size={8} style={{ width: "100%" }}>
+        <Title level={4} style={{ margin: 0, color: "#389e0d" }}>
+          Driver ECR Signed
+        </Title>
+
+        <Text style={{ color: "#595959" }}>
+          This Driver ECR was Signed on{" "}
+          <strong>{dayjs(data[0].SignatureDate).format("DD-MM-YY HH:mm")}</strong>.
+        </Text>
+
+        <Tag color="green">Signed</Tag>
+
+        <Space>
+          <Button
+            type="primary"
+            icon={<EyeOutlined />}
+            size="middle"
+            style={{
+              backgroundColor: "#389e0d",
+              borderColor: "#389e0d",
+            }}
+            onClick={() => setVisibleSignatureModal(true)}
+          >
+            View Signature
+          </Button>
+        </Space>
+
+        {/* ✅ New Section: Physical ECR No Input */}
+        <Space>
+          <Input
+            placeholder="Enter Physical ECR No"
+            value={physicalECRNo}
+            onChange={(e) => setPhysicalECRNo(e.target.value)}
+          />
+
+        </Space>
+        <Space>
+                    <Button
+            type="primary"
+            onClick={() => handleAssignPhysicalECRNo(physicalECRNo)}
+          >
+            Assign Physical ECR No
+          </Button>
+        </Space>
+      </Space>
+    </div>
+
+    <SignaturePreviewModal
+      visible={visibleSignatureModal}
+      setVisible={setVisibleSignatureModal}
+      base64String={data[0].SignatureImageBlob}
+    />
+  </div>
+</>
+
       </MobilePageShell>
     );
   }

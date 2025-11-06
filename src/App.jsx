@@ -22,7 +22,6 @@ import UserAccess from './app/UserAccess/userAccess';
 import { DriverEcr } from './app/transport/DriverEcr/DriverEcr';
 import { DriverECRDetail } from './app/transport/DriverEcr/DriverEcrDetail';
 import { ECR } from './app/warehouse/ECR/ECR';
-import { ECRDetail } from './app/warehouse/ECR/ECRDetail';
 import { CustSiteVerificationAccountCode } from './app/transport/CustSiteVerification/CustSiteVerificationAccountCode';
 function App() {
 
@@ -60,7 +59,6 @@ function App() {
           <Route exact path={PathLink.driverEcrDetail} component={DriverECRDetail} />
           {/* ECR */}
           <Route exact path={PathLink.ecr} component={ECR} />
-          <Route exact path={PathLink.ecrDetail} component={ECRDetail} />
         </Switch>
       </BrowserRouter>
     </>
