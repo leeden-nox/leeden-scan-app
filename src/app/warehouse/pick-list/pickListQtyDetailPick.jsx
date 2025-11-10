@@ -70,7 +70,6 @@ export const PickListQtyDetailPick = () => {
       const response = await AxiosWithLoading(
         APIHelper.postConfig("/logistics/getPickListQtyDetailSeqNo", body)
       );
-      console.log('data: ', response.data)
       const headerData = response.data.Records.records;
       setAuthorized(true);
       setData(headerData);
@@ -955,7 +954,7 @@ const BatchSerialModal = ({
           </div>
         </Card>
 
-        {list.filter(item => (item.BatchNo || '').toLowerCase().includes(search) || (item.Serial || '').toLowerCase().includes(search)).map((detail, index) => (
+        {list.filter(item => (item.BatchNo || '').toLowerCase().includes(search.toLowerCase()) || (item.Serial || '').toLowerCase().includes(search.toLowerCase())).map((detail, index) => (
           <Card
             key={index}
             style={{ marginBottom: 16 }}
