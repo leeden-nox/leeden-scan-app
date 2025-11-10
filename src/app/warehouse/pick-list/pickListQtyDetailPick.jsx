@@ -171,6 +171,7 @@ export const PickListQtyDetailPick = () => {
       message.error("Please select bin location first.");
       return;
     }
+    console.log('data: ', data);
     try {
       let body = {
         DONo: DONo,
