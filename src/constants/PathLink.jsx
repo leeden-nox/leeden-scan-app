@@ -17,4 +17,5 @@ export const PathLink = {
   driverEcrDetail: "/driver-ecr/:id",
   ecr: "/ecr",
   ecrDetail: "/ecr/:id",
+  processingGRPO: "/goods-receipt-po/processing",
 }

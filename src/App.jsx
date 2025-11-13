@@ -23,6 +23,7 @@ import { DriverEcr } from './app/transport/DriverEcr/DriverEcr';
 import { DriverECRDetail } from './app/transport/DriverEcr/DriverEcrDetail';
 import { ECR } from './app/warehouse/ECR/ECR';
 import { CustSiteVerificationAccountCode } from './app/transport/CustSiteVerification/CustSiteVerificationAccountCode';
+import ProcessingGRPO from './app/GoodsReceiptPO/ProcessingGRPO';
 function App() {
 
   return (
@@ -59,6 +60,9 @@ function App() {
           <Route exact path={PathLink.driverEcrDetail} component={DriverECRDetail} />
           {/* ECR */}
           <Route exact path={PathLink.ecr} component={ECR} />
+
+          {/* GRPO */}
+          <Route exact path={PathLink.processingGRPO} component={ProcessingGRPO} />
         </Switch>
       </BrowserRouter>
     </>
