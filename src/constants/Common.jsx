@@ -5,6 +5,7 @@ import axios from "axios";
 import onScan from "onscan.js";
 import jwt_decode from "jwt-decode";
 import _ from "lodash";
+import { PathLink } from "./PathLink";
 
 export function RemoveLocalStorageOnLogout() {
   localStorage.removeItem(LocalStorage.ACCESS_TOKEN);
@@ -40,6 +41,8 @@ export const ErrorPrinter = (error) => {
 
   if (msg === "Invalid access token.") {
     RemoveLocalStorageOnLogout();
+    // window.location.href = PathLink.login;
+    history.push(PathLink.login);
   }
 };
 

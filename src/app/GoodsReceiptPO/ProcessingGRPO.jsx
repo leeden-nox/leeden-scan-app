@@ -2,7 +2,7 @@ import { PlusOutlined } from "@ant-design/icons";
 import { FloatButton } from "antd";
 import { useState } from "react";
 import { Route, Switch, useHistory, useLocation } from "react-router-dom";
-import { SpinLoading } from "../../constants/Common";
+import { RemoveLocalStorageOnLogout, SpinLoading } from "../../constants/Common";
 import MobilePageShell from "../../constants/MobilePageShell";
 import { PathLink } from "../../constants/PathLink";
 import UnauthorizedPage from "../../constants/Unauthorized";
@@ -33,7 +33,7 @@ const ProcessingGRPO = () => {
               icon={<PlusOutlined />}
               type="primary"
               style={{ right: 15, bottom: 57 }} // position bottom-right
-              onClick={() => alert("Floating Button Clicked!")}
+              onClick={() => {console.log("Add GRPO")}}
             />
             <div className="d-flex justify-content-around" style={{position:'fixed', bottom:0, width:'100vw', background:'white'}}>
               <div className="">
