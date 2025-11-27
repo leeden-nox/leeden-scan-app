@@ -167,6 +167,7 @@ const DeliveryCard = ({ record, onClick }) => {
     IsCOPSerial,
     DOStatusName,
     TotalSerial,
+    DocTagNo
   } = record;
 
   const formattedDate = RequiredDate
@@ -207,8 +208,11 @@ const DeliveryCard = ({ record, onClick }) => {
             <Tag color={statusColor}>{DOStatusName}</Tag>
             <Text style={{ color: "#5d6168" }}>{formattedDate}</Text>
             <Text italic style={{ color: "#5d6168" }}>{AccountName}</Text>
-            <Text style={{ whiteSpace: "pre-line", color: "#c7c7c7" }}>
+            <Text style={{ whiteSpace: "pre-line", color: "#8e8e93" }}>
               {DeliveryAddressText}
+            </Text>
+            <Text style={{ whiteSpace: "pre-line", color: "#8e8e93" }}>
+              {DocTagNo}
             </Text>
           </Space>
         </Col>

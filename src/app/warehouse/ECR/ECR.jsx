@@ -160,10 +160,10 @@ export const ECR = () => {
   };
   //Scan SerialNo
   const handleSubmit = (barcode) => {
-    const trimmed = barcode.trim();
+    const trimmed = barcode.trim().toUpperCase();
 
     // find if serial exists in data
-    const record = data.find((record) => record.SerialNo === trimmed);
+    const record = data.find((record) => record.SerialNo.toUpperCase() === trimmed);
 
     if (!record) {
       message.error(`Serial ${trimmed} not found`);

@@ -144,6 +144,9 @@ export const DriverEcr = () => {
               <div style={{ color: "#8c8c8c", marginTop: "12px" }}>
                 Cylinder Count: {record.SerialCount}
               </div>
+              <div style={{ color: "#8c8c8c", marginTop: "12px" }}>
+                Customer Short Name: {record.AccountShortName}
+              </div>
               <div style={{ marginTop: "12px", color: "#8c8c8c" }}>
                 Signed:{" "}
                 <span
