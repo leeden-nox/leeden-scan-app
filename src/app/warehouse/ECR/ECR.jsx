@@ -160,10 +160,11 @@ export const ECR = () => {
   };
   //Scan SerialNo
   const handleSubmit = (barcode) => {
-const trimmedUpper = (trimmed || "").toUpperCase();
+const trimmed = (barcode || "").trim().toUpperCase();
 
-const record = data.find((record) =>
-  (record?.SerialNo || "").toUpperCase() === trimmedUpper
+// find if serial exists in data
+const record = data.find(record =>
+  (record?.SerialNo ?? "").toString().toUpperCase() === trimmed
 );
 
     if (!record) {
