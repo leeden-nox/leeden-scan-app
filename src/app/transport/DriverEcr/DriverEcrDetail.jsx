@@ -26,6 +26,8 @@ import {
   Tooltip,
   Typography,
   Tag,
+  Descriptions,
+  Divider
 } from "antd";
 import { useEffect, useRef, useState } from "react";
 import { useHistory, useParams } from "react-router-dom";
@@ -61,6 +63,7 @@ export const DriverECRDetail = () => {
   const [selectedSerialNoObject, setSelectedSerialNoObject] = useState(null);
   const [visibleSignatureModal, setVisibleSignatureModal] = useState(false);
   const [driverECRFaultyReasons, setDriverECRFaultyReasons] = useState([]);
+  const [showContainerDetailModal, setShowContainerDetailModal] = useState(false);
   const [physicalECRNo, setPhysicalECRNo] = useState("");
   const getDriverECRDetailSerial = async () => {
     setIsLoading(true);
@@ -333,8 +336,11 @@ export const DriverECRDetail = () => {
           >
             View Signature
           </Button>
+              
         </Space>
-
+            <Space>
+              <Button onClick={() => setShowContainerDetailModal(true)}>View Serials</Button>
+            </Space>
         {/* ✅ New Section: Physical ECR No Input */}
         <Space>
           <Input
@@ -354,7 +360,11 @@ export const DriverECRDetail = () => {
         </Space>
       </Space>
     </div>
-
+    <ContainerDetailModal
+      visible={showContainerDetailModal}
+      onClose={() => setShowContainerDetailModal(false)}
+      data={data}
+    />
     <SignaturePreviewModal
       visible={visibleSignatureModal}
       setVisible={setVisibleSignatureModal}
@@ -719,5 +729,68 @@ const SignDriverECRButton = ({ ECRNo, onRefresh }) => {
         }}
       />
     </>
+  );
+};
+const ContainerDetailModal = ({ visible, onClose, data }) => {
+  if (!Array.isArray(data) || data.length === 0) return null;
+
+  return (
+    <Modal
+      open={visible}
+      onCancel={onClose}
+      footer={null}
+      title="Container Details"
+      width={700}
+      bodyStyle={{
+        maxHeight: "60vh",   // limit height
+        overflowY: "auto",   // enable vertical scroll
+        paddingRight: "15px" // avoid scrollbar overlapping content
+      }}
+    >
+      {data.map((item, index) => {
+        const { SerialNo, Remarks, QRRemark, IsFullGasReturn } = item;
+
+        const remarksText =
+          !Remarks || Remarks.trim() === ""
+            ? "Not Faulty"
+            : Remarks === "Faulty Container"
+            ? "Faulty Container"
+            : Remarks;
+
+        return (
+          <div key={index}>
+            <Descriptions bordered column={1} size="middle">
+              <Descriptions.Item label="Serial No">
+                {SerialNo}
+              </Descriptions.Item>
+
+              <Descriptions.Item label="Remarks">
+                {remarksText === "Faulty" ? (
+                  <Tag color="red">{remarksText}</Tag>
+                ) : (
+                  <Tag color="green">{remarksText}</Tag>
+                )}
+              </Descriptions.Item>
+
+              {QRRemark && QRRemark.trim() !== "" && (
+                <Descriptions.Item label="Fault Remarks">
+                  {QRRemark}
+                </Descriptions.Item>
+              )}
+
+              <Descriptions.Item label="Container Status">
+                {IsFullGasReturn ? (
+                  <Tag color="blue">Full Container</Tag>
+                ) : (
+                  <Tag color="orange">Empty Container</Tag>
+                )}
+              </Descriptions.Item>
+            </Descriptions>
+
+            {index < data.length - 1 && <Divider />}
+          </div>
+        );
+      })}
+    </Modal>
   );
 };
