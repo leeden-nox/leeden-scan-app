@@ -2,10 +2,9 @@ import { PlusOutlined } from "@ant-design/icons";
 import { FloatButton } from "antd";
 import { useState } from "react";
 import { Route, Switch, useHistory, useLocation } from "react-router-dom";
-import { RemoveLocalStorageOnLogout, SpinLoading } from "../../constants/Common";
-import MobilePageShell from "../../constants/MobilePageShell";
-import { PathLink } from "../../constants/PathLink";
-import UnauthorizedPage from "../../constants/Unauthorized";
+
+import { PathLink } from "../../../constants/PathLink";
+import NewGRPO from "./NewGRPO";
 
 const ProcessingGRPO = () => {
   const history = useHistory();
@@ -23,6 +22,7 @@ const ProcessingGRPO = () => {
     return (
       <>
         <Switch>
+          <Route exact path={PathLink.newGRPO} conmponent={NewGRPO} />
           <Route exact path={'/'} render={() => <MainMenu />} />
         </Switch>
         <Route exact path={PathLink.processingGRPO}>
@@ -33,7 +33,7 @@ const ProcessingGRPO = () => {
               icon={<PlusOutlined />}
               type="primary"
               style={{ right: 15, bottom: 57 }} // position bottom-right
-              onClick={() => {console.log("Add GRPO")}}
+              onClick={() => history.push(PathLink.newGRPO)}
             />
             <div className="d-flex justify-content-around" style={{position:'fixed', bottom:0, width:'100vw', background:'white'}}>
               <div className="">

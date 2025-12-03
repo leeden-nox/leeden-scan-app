@@ -23,7 +23,10 @@ import { DriverEcr } from './app/transport/DriverEcr/DriverEcr';
 import { DriverECRDetail } from './app/transport/DriverEcr/DriverEcrDetail';
 import { ECR } from './app/warehouse/ECR/ECR';
 import { CustSiteVerificationAccountCode } from './app/transport/CustSiteVerification/CustSiteVerificationAccountCode';
-import ProcessingGRPO from './app/GoodsReceiptPO/ProcessingGRPO';
+import ProcessingGRPO from './app/warehouse/GoodsReceiptPO/ProcessingGRPO';
+import NewGRPO from './app/warehouse/GoodsReceiptPO/NewGRPO';
+import HPRefilling from './app/manufacturing/HPRefilling/hpRefilling';
+import HPRefillingDetail from './app/manufacturing/HPRefilling/hpRefillingDetail';
 function App() {
 
   return (
@@ -63,6 +66,11 @@ function App() {
 
           {/* GRPO */}
           <Route exact path={PathLink.processingGRPO} component={ProcessingGRPO} />
+          <Route exact path={PathLink.newGRPO} component={NewGRPO} />
+
+          {/* HP Refilling */}
+          <Route exact path={PathLink.hpRefilling} component={HPRefilling} />
+          <Route exact path={PathLink.hpRefillingDetail} component={HPRefillingDetail} />
         </Switch>
       </BrowserRouter>
     </>
