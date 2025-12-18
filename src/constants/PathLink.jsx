@@ -18,4 +18,7 @@ export const PathLink = {
   ecr: "/ecr",
   ecrDetail: "/ecr/:id",
   processingGRPO: "/goods-receipt-po/processing",
+  newGRPO: "/goods-receipt-po/new",
+  hpRefilling: '/hp-refilling',
+  hpRefillingDetail: '/hp-refilling/:id',
 }
