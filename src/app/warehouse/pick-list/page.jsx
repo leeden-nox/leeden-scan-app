@@ -77,6 +77,7 @@ const DOCard = ({ doData, onRefresh }) => {
     RequiredDate,
     DocTagNo,
     isAllPicked,
+    PackingDetailRequired
   } = doData;
   const history = useHistory();
   const routeToDetail = () => {
@@ -170,6 +171,7 @@ const DOCard = ({ doData, onRefresh }) => {
           >
             {StatusName}
           </Tag>
+          {PackingDetailRequired ? <Tag style={{borderRadius:'1rem', fontWeight:'bold', fontSize:'1rem'}} color={StatusName === "Partially Picked" ? "#ECAE1C" : "#595A5C"}>P</Tag> : null}
           {isAllPicked === 1 && (
             <Button
               type="text"

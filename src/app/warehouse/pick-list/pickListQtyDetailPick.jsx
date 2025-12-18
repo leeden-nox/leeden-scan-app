@@ -17,7 +17,7 @@ import {
   Modal,
   Row,
   Space,
-  Typography,
+  Typography
 } from "antd";
 import dayjs from "dayjs";
 import { useEffect, useRef, useState } from "react";
@@ -27,6 +27,7 @@ import { AxiosWithLoading, ErrorPrinter, playErrorSound, playSound, ScanListener
 import MobilePageShell from "../../../constants/MobilePageShell";
 import UnauthorizedPage from "../../../constants/Unauthorized";
 import "./FullScreenPage.css";
+import PickListQtyDetailPickSerial from "./pickListQtyDetailPickSerial";
 
 const { Text } = Typography;
 export const PickListQtyDetailPick = () => {
@@ -47,10 +48,7 @@ export const PickListQtyDetailPick = () => {
   const [batchList, setBatchList] = useState([]);
   const [showBatchModal, setShowBatchModal] = useState(false);
   const [selectedBatch, setSelectedBatch] = useState(null);
-  // serial
-  const [serialList, setSerialList] = useState([]);
-  const [showSerialModal, setShowSerialModal] = useState(false);
-  const [selectedSerial, setSelectedSerial] = useState(null);
+  
   const [modalVisible, setModalVisible] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
   const [isFulFilled, setisFulFilled] = useState(true);
@@ -77,6 +75,9 @@ export const PickListQtyDetailPick = () => {
         response.data.Records.records[0].OrderedProdCode,
         ...response.data.Records.records.map((item) => item.SupplierCode),
       ]);
+      if (response.data.Records.records[0].OrderedProdCode === '00000000000' || response.data.Records.records[0].ProdCategoryID === 'T' || response.data.Records.records[0].OrderedProdCode.startsWith('Z')) {
+        setIsVerified(true);
+      }
       // Check if the record is tracked by batch
       if (
         response.data.Records.records &&
@@ -137,25 +138,6 @@ export const PickListQtyDetailPick = () => {
 
         setBatchSerialData(merged);
       }
-      else if (response.data.Records.records && response.data.Records.records[0].TrackedBySerial) {
-        const response2 = await AxiosWithLoading(
-          APIHelper.postConfig("/logistics/getPickListQtyBatchSerial", {
-            DONo: DONo,
-            DetailNo: id,
-          })
-        );
-        const response3 = await AxiosWithLoading(
-          APIHelper.postConfig("/logistics/pickListQtyGetSerialNoSAP", {
-            ProdCode: response.data.Records.records[0].OrderedProdCode,
-            Warehouse: response.data.Records.records[0].Warehouse,
-            UOM: response.data.Records.records[0].UOM,
-          })
-        );
-
-        setBatchSerialData(response2.data.Records.records);
-
-        setSerialList(response3.data);
-      }
     } catch (error) {
       setAuthorized(false);
       ErrorPrinter(error);
@@ -171,7 +153,6 @@ export const PickListQtyDetailPick = () => {
       message.error("Please select bin location first.");
       return;
     }
-    console.log('data: ', data);
     try {
       let body = {
         DONo: DONo,
@@ -216,42 +197,11 @@ export const PickListQtyDetailPick = () => {
     message.success("Pick List updated successfully");
   };
 
-  const updatePickListSerial = async (DONo, DetailNo) => {
-    try {
-      let body = {
-        DONo: DONo,
-        DetailNo: DetailNo,
-        Serial: selectedSerial.Serial,
-        MfrSerialNo: selectedSerial.MfrSerialNo || '',
-        AdmissionDate: selectedSerial.AdmissionDate,
-        Warehouse: selectedSerial.Warehouse,
-        Location: selectedBin?.Bin || '',
-        IsBin: data[0]?.IsBinActivated || false
-      };
-      await AxiosWithLoading(
-        APIHelper.postConfig("/logistics/pickListSerialPick", body)
-      );
-      getPickListQtyDetail();
-      message.success("Pick List updated successfully");
-    } catch (error) {
-      ErrorPrinter(error);
-    }
-  }
-
   const scanBarcode = (barcode) => {
     if (data[0].TrackedByBatch) {
       const matchedBatch = batchList.find((item) => item.BatchNo === barcode);
       if (matchedBatch) {
         setSelectedBatch(matchedBatch);
-        playSound();
-
-        return;
-      }
-    }
-    else if (data[0].TrackedBySerial) {
-      const matchedSerial = serialList.find((item) => item.Serial === barcode);
-      if (matchedSerial) {
-        setSelectedSerial(matchedSerial);
         playSound();
 
         return;
@@ -324,6 +274,7 @@ const validatePicking = async (DetailNo) => {
     try {
       let body = {
         DetailNo: DetailNo,
+        DONo: DONo
       };
       await AxiosWithLoading(
         APIHelper.postConfig("/logistics/pickListBatchSerialDelete", body)
@@ -352,23 +303,6 @@ const validatePicking = async (DetailNo) => {
     setItemToFulFill(null);
   };
 
-  // serial
-  const getPickListSerial = async (prodCode, warehouse, UOM) => {
-    try {
-      const response = await AxiosWithLoading(
-        APIHelper.postConfig("/logistics/pickListQtyGetSerialNoSAP", {
-          ProdCode: prodCode,
-          Warehouse: warehouse,
-          UOM: UOM,
-        })
-      );
-      setSerialList(response.data);
-      setShowSerialModal(true);
-    } catch (error) {
-      ErrorPrinter(error);
-    }
-  }
-
   useEffect(() => {
     getPickListQtyDetail();
   }, []);
@@ -395,6 +329,11 @@ const validatePicking = async (DetailNo) => {
           subTitle={"CS Select more than 1 batch."}
         />
       </div>
+    );
+  }
+  if (data.length > 0 && data[0].TrackedBySerial) {
+    return (
+      <PickListQtyDetailPickSerial data={data} setData={setData} possibleProdCodes={possibleProdCodes} />
     );
   }
 
@@ -432,24 +371,6 @@ const validatePicking = async (DetailNo) => {
     setSelectedBatch(null);
   };
 
-  const handleAddSerial = () => {
-    if (!selectedSerial) {
-      message.error("Please select a serial before adding.");
-      return;
-    }
-    if (!selectedBin && data[0]?.IsBinActivated){
-      message.error("Please select bin location first.");
-      return;
-    }
-    if (batchSerialData.some((item) => item.Serial === selectedSerial.Serial)) {
-      message.error("Serial already added.");
-      return;
-    }
-
-    updatePickListSerial(DONo, id);
-    setSelectedSerial(null)
-  }
-
   const handleAddBin = async () => {
     try {
       if (!isVerified) {
@@ -472,24 +393,13 @@ const validatePicking = async (DetailNo) => {
   }
 
   return showBatchModal ? (
-    <BatchSerialModal
+    <BatchModal
       visible={showBatchModal}
       onClose={() => setShowBatchModal(false)}
       list={batchList}
       onRefresh={getPickListBatch}
       item={data[0]}
       setSelected={setSelectedBatch}
-      isBatch={true}
-    />
-  ) : showSerialModal ? (
-    <BatchSerialModal 
-      visible={showSerialModal}
-      onClose={() => setShowSerialModal(false)}
-      list={serialList}
-      onRefresh={getPickListSerial}
-      item={data[0]}
-      setSelected={setSelectedSerial}
-      isBatch={false}
     />
   ) : showBinLocation ? (
     <BinLocationModal
@@ -740,67 +650,6 @@ const validatePicking = async (DetailNo) => {
                 </div>
               </>
             )}
-            {data[0].TrackedBySerial && (
-              <>
-                <Row
-                  gutter={8}
-                  style={{
-                    width: "100%",
-                    display: "flex",
-                    alignItems: "between",
-                  }}
-                >
-                  <Col flex="100%">
-                    <Button
-                      type="primary"
-                      onClick={() => getPickListSerial(
-                          data[0].OrderedProdCode,
-                          data[0].Warehouse,
-                          data[0].UOM
-                        )
-                      }
-                      disabled={!isVerified}
-                      style={{
-                        backgroundColor: "#377188",
-                        width: "100%",
-                        borderRadius: 50,
-                      }}
-                    >
-                      {selectedSerial ? selectedSerial.Serial : "Select Serial"}
-                    </Button>
-                  </Col>
-                  {selectedSerial && (
-                    <Card style={{ marginTop: 16, backgroundColor: "white", width:'100vw' }}>
-                      <div style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                      }}>
-                        <div style={{ fontSize: 14, fontWeight: 600, color: "#888" }}>Serial: {selectedSerial.Serial}</div>
-                        <div style={{ color: "#377188", fontWeight: 600, fontSize: 16 }}>Qty: {1}</div>
-                        <Button
-                          type="text"
-                          icon={<DeleteOutlined style={{ color: "red" }} />}
-                          onClick={() => setSelectedSerial(null)}
-                        />
-                      </div>
-                    </Card>
-                  )}
-                </Row>
-                {selectedSerial && (
-                  <Row>
-                    <Button
-                      type="primary"
-                      block
-                      onClick={() => handleAddSerial()}
-                      style={{ backgroundColor: "#377188", bottom: '20px', position:'absolute', width:'100vw' }}
-                    >
-                      Post to LMS
-                    </Button>
-                  </Row>
-                )}
-              </>
-            )}
             {/* Default non batch non serial. */}
             {!data[0].TrackedByBatch && !data[0].TrackedBySerial && (
               <>
@@ -907,14 +756,65 @@ const ScanModal = ({ visible, onClose, possibleProdCodes }) => {
   );
 };
 
-const BatchSerialModal = ({
+const ShowBatchSerialInfo = ({item}) => {
+  return (
+    <Card style={{ marginBottom: 16, backgroundColor: "#f4f6f8" }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          marginBottom: 6,
+        }}
+      >
+        <span style={{ fontSize: 14, fontWeight: 600, color: "#888" }}>
+          Warehouse: {item.Warehouse}
+        </span>
+        <span style={{ fontSize: 14, fontWeight: 600, color: "#005999" }}>
+          Code: {item.OrderedProdCode}
+        </span>
+      </div>
+
+      <div style={{ fontSize: 11, fontWeight: 500, color: "#222" }}>
+        {item.OrderedProdName}
+      </div>
+    </Card>
+  )
+}
+
+const ShowItemDateDetail = ({detail}) => {
+  return (
+    <div style={{ backgroundColor: "#fefefe" }}>
+      <div style={{ fontSize: 13, color: "#444", lineHeight: 1.6 }}>
+        <div>
+          <strong>Manufacturing Date:</strong>{" "}
+          {detail.ManufacturingDate
+            ? dayjs(detail.ManufacturingDate).format("DD/MM/YYYY")
+            : "-"}
+        </div>
+        <div>
+          <strong>Expiration Date:</strong>{" "}
+          {detail.ExpirationDate
+            ? dayjs(detail.ExpirationDate).format("DD/MM/YYYY")
+            : "-"}
+        </div>
+        <div>
+          <strong>Admission Date:</strong>{" "}
+          {detail.AdmissionDate
+            ? dayjs(detail.AdmissionDate).format("DD/MM/YYYY")
+            : "-"}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+const BatchModal = ({
   visible,
   onClose,
   list = [],
   onRefresh,
   item,
-  setSelected,
-  isBatch = true
+  setSelected
 }) => {
   const [search, setSearch] = useState("");
 
@@ -926,36 +826,17 @@ const BatchSerialModal = ({
   return (
     visible && (
       <MobilePageShell
-        title={isBatch ? "Batch Nos" : "Serials"}
+        title={"Batch Nos"}
         onBack={onClose}
         onRefresh={() =>
           onRefresh(item.OrderedProdCode, item.Warehouse, item.UOM)
         }
       >
         <SpinLoading />
-        <Input className="m-2" style={{width:'95vw'}} placeholder="Search Batch/Serial" value={search} onChange={(e) => setSearch(e.target.value)} />
-        <Card style={{ marginBottom: 16, backgroundColor: "#f4f6f8" }}>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              marginBottom: 6,
-            }}
-          >
-            <span style={{ fontSize: 14, fontWeight: 600, color: "#888" }}>
-              Warehouse: {item.Warehouse}
-            </span>
-            <span style={{ fontSize: 14, fontWeight: 600, color: "#005999" }}>
-              Code: {item.OrderedProdCode}
-            </span>
-          </div>
+        <Input className="m-2" style={{width:'95vw'}} placeholder="Search Batch" value={search} onChange={(e) => setSearch(e.target.value)} />
+        <ShowBatchSerialInfo item={item} />
 
-          <div style={{ fontSize: 11, fontWeight: 500, color: "#222" }}>
-            {item.OrderedProdName}
-          </div>
-        </Card>
-
-        {list.filter(item => (item.BatchNo || '').toLowerCase().includes(search.toLowerCase()) || (item.Serial || '').toLowerCase().includes(search.toLowerCase())).map((detail, index) => (
+        {list.filter(item => (item.BatchNo || '').toLowerCase().includes(search.toLowerCase())).map((detail, index) => (
           <Card
             key={index}
             style={{ marginBottom: 16 }}
@@ -969,37 +850,14 @@ const BatchSerialModal = ({
               }}
             >
               <span style={{ color: "#377188", fontWeight: 600, fontSize: 16 }}>
-                {isBatch ? `Batch No: ${detail.BatchNo}` : `Serial: ${detail.Serial}`}
+                Batch No: {detail.BatchNo}
               </span>
-              {isBatch && (
-                <span style={{ fontWeight: 500 }}>
-                  Qty: {parseFloat(detail.Qty)} {detail.UOM}
-                </span>)
-              }
+              <span style={{ fontWeight: 500 }}>
+                Qty: {parseFloat(detail.Qty)} {detail.UOM}
+              </span>
             </div>
 
-            <div style={{ backgroundColor: "#fefefe" }}>
-              <div style={{ fontSize: 13, color: "#444", lineHeight: 1.6 }}>
-                <div>
-                  <strong>Manufacturing Date:</strong>{" "}
-                  {detail.ManufacturingDate
-                    ? dayjs(detail.ManufacturingDate).format("DD/MM/YYYY")
-                    : "-"}
-                </div>
-                <div>
-                  <strong>Expiration Date:</strong>{" "}
-                  {detail.ExpirationDate
-                    ? dayjs(detail.ExpirationDate).format("DD/MM/YYYY")
-                    : "-"}
-                </div>
-                <div>
-                  <strong>Admission Date:</strong>{" "}
-                  {detail.AdmissionDate
-                    ? dayjs(detail.AdmissionDate).format("DD/MM/YYYY")
-                    : "-"}
-                </div>
-              </div>
-            </div>
+            <ShowItemDateDetail detail={detail} />
           </Card>
         ))}
       </MobilePageShell>

@@ -244,3 +244,14 @@
   border-radius: 0.5rem;
   font-size: 0.8rem;
 }
+
+.card-checboxWrap {
+  flex-direction: row-reverse;
+}
+.card-checboxWrap .ant-wave-target {
+  z-index: 2;
+  right: 2rem;
+}
+.card-checboxWrap .ant-checkbox-label {
+  width: 100vw;
+}

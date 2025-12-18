@@ -1,6 +1,6 @@
 import { DeleteOutlined, SearchOutlined } from '@ant-design/icons';
 import { RiDeleteBin7Line } from "react-icons/ri";
-import { Input, InputNumber, notification, Select, Space, Typography } from "antd";
+import { Input, InputNumber, notification, Select, Space, Tag, Typography } from "antd";
 import { useEffect, useState } from "react";
 import { IoMdAddCircle } from "react-icons/io";
 import { MdChevronRight } from "react-icons/md";
@@ -331,7 +331,7 @@ const HPRefillingDetail = () => {
                   <div className='d-flex justify-content-between py-2 px-3' style={{borderBottom:'1px solid #ccc'}} key={index}>
                     <div>
                       <div>{serial.SerialNo}</div>
-                      <div className='ownerType-badge'>{serial.OwnerType}</div>
+                      <Tag color='#817e7e' style={{color:'white'}}>{serial.OwnerType}</Tag>
                     </div>
                     <div>
                       <div>{data.ProdCode}</div>

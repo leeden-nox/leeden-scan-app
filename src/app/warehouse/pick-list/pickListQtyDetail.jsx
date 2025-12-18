@@ -89,7 +89,6 @@ export const PickListQtyDetail = () => {
       }
     } catch (error) {
       setAuthorized(false);
-      console.log(error);
       ErrorPrinter(error, history);
     }
   };
