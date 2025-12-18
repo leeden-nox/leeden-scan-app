@@ -1,5 +1,5 @@
-import { Button, Modal, Space, Typography } from "antd";
-import { useRef } from "react";
+import { Button, Modal, Space, Typography,Input } from "antd";
+import { useRef,useState } from "react";
 import SignaturePad from "react-signature-canvas";
 
 const { Text } = Typography;
@@ -14,7 +14,7 @@ const SignaturePadJpeg = ({
   modalTitle = "Signature",
 }) => {
   const sigPadRef = useRef(null);
-
+const [name, setName] = useState("");
   const handleClose = () => setVisible(false);
   const handleClear = () => sigPadRef.current?.clear();
 
@@ -32,7 +32,10 @@ const SignaturePadJpeg = ({
     const dataUrl = canvas.toDataURL("image/jpeg");
     const base64Data = dataUrl.split(",")[1];
 
-    if (onSubmit) onSubmit(base64Data);
+        onSubmit?.({
+      signature: base64Data,
+      name: name.trim(),
+    });
     handleClose();
     handleClear();
   };
@@ -61,11 +64,17 @@ const SignaturePadJpeg = ({
             canvasProps={{ width, height, className: "signatureCanvas" }}
           />
         </div>
+                <Input
+          placeholder="Full name (for audit purposes)"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+        />
         <Space>
           <Button onClick={handleClear}>Clear</Button>
           <Button
             type="primary"
             onClick={handleSubmit}
+            disabled={!name.trim()}
             style={{ background: "#377188", borderColor: "#377188" }}
           >
             Submit

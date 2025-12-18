@@ -369,6 +369,7 @@ export const DriverECRDetail = () => {
       visible={visibleSignatureModal}
       setVisible={setVisibleSignatureModal}
       base64String={data[0].SignatureImageBlob}
+      name={data[0].CustSignatureName}
     />
   </div>
 </>
@@ -696,12 +697,14 @@ const SerialNoEntryModal = ({ showModal, setShowModal, onSearch }) => {
 
 const SignDriverECRButton = ({ ECRNo, onRefresh }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const signDO = async (Signature) => {
+  const signDO = async (SignatureAndName) => {
     setIsModalOpen(false);
+    const { signature: Signature, name: Name } = SignatureAndName;
     try {
       let body = {
         ECRNo: ECRNo,
         Signature: Signature,
+        Name: Name,
       };
       await AxiosWithLoading(APIHelper.postConfig("/logistics/eSignECR", body));
       onRefresh();

@@ -1,11 +1,11 @@
 import { Modal, Image } from "antd";
 
-const SignaturePreviewModal = ({ visible, setVisible, base64String }) => {
+const SignaturePreviewModal = ({ visible, setVisible, base64String, name }) => {
   const imageUrl = base64String ? `data:image/jpeg;base64,${base64String}` : null;
 
   return (
     <Modal
-      title="Signature Preview"
+      title={`Received By - ${name}`}
       open={visible}
       onCancel={() => setVisible(false)}
       footer={null}

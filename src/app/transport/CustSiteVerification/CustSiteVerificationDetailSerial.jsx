@@ -43,6 +43,7 @@ export const CustSiteVerificationDetailSerial = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [visibleSignatureModal, setVisibleSignatureModal] = useState(false);
   const [signatureBase64, setSignatureBase64] = useState(null);
+  const [custSignatureName, setCustSignatureName] = useState(null);
   const getOnSiteScheduleIDVerification = async () => {
     getDOData();
     setIsLoading(true);
@@ -81,6 +82,7 @@ export const CustSiteVerificationDetailSerial = () => {
       );
       setDOData(responseParam.data.records[0]);
       setSignatureBase64(responseParam.data.records[0].SignatureImageBlob);
+      setCustSignatureName(responseParam.data.records[0].CustSignatureName);
     } catch (error) {
       ErrorPrinter(error, history);
     } finally {
@@ -426,6 +428,7 @@ export const CustSiteVerificationDetailSerial = () => {
                 visible={visibleSignatureModal}
                 setVisible={setVisibleSignatureModal}
                 base64String={signatureBase64}
+                name={custSignatureName}
               />
             </div>
           </>
@@ -507,11 +510,13 @@ const SerialNoEntryModal = ({ showModal, setShowModal, onSearch }) => {
 
 const ConfirmDeliveryButton = ({ handleMarkDelivered, DONo }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const signDO = async (Signature) => {
+  const signDO = async (SignatureAndName) => {
+    const { signature: Signature, name: Name } = SignatureAndName;
     try {
       let body = {
         DONo: DONo,
         Signature: Signature,
+        Name: Name,
       };
 
       await handleMarkDelivered();
