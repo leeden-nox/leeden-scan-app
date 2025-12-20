@@ -27,6 +27,9 @@ import ProcessingGRPO from './app/warehouse/GoodsReceiptPO/ProcessingGRPO';
 import NewGRPO from './app/warehouse/GoodsReceiptPO/NewGRPO';
 import HPRefilling from './app/manufacturing/HPRefilling/hpRefilling';
 import HPRefillingDetail from './app/manufacturing/HPRefilling/hpRefillingDetail';
+import PendingAssignPickList from './app/warehouse/PendingToAssign/PendingAssignPickList';
+import PendingAssignPickListDetail from './app/warehouse/PendingToAssign/PendingAssignPickListDetail';
+import AssignedPickList from './app/warehouse/PendingToAssign/AssignedPickList';
 function App() {
 
   return (
@@ -71,6 +74,12 @@ function App() {
           {/* HP Refilling */}
           <Route exact path={PathLink.hpRefilling} component={HPRefilling} />
           <Route exact path={PathLink.hpRefillingDetail} component={HPRefillingDetail} />
+
+          {/* Pending Assign Pick List */}
+          <Route exact path={PathLink.pendingAssignPickList} component={PendingAssignPickList} />
+          <Route exact path={PathLink.pendingAssignPickListDetail} component={PendingAssignPickListDetail} />
+          <Route exact path={PathLink.assignedPickList} component={AssignedPickList} />
+
         </Switch>
       </BrowserRouter>
     </>

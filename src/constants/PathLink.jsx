@@ -21,4 +21,7 @@ export const PathLink = {
   newGRPO: "/goods-receipt-po/new",
   hpRefilling: '/hp-refilling',
   hpRefillingDetail: '/hp-refilling/:id',
+  pendingAssignPickList: '/pending-assign-pick-list',
+  pendingAssignPickListDetail: '/pending-assign-pick-list/:doNo',
+  assignedPickList: '/assigned-pick-list',
 }
