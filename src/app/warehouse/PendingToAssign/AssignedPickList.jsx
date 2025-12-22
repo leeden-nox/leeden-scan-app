@@ -56,7 +56,7 @@ const AssignedPickList = () => {
                 <div onClick={() => history.push(PathLink.pendingAssignPickList + '/' + item.PickNo)} key={index} style={{padding:12, borderBottom:'1px solid #ccc'}}>
                   <div className="d-flex justify-content-between">
                     <div style={{fontWeight:'bold'}}>{item.PickNo}</div>
-                    <div>{moment(item.PickDate).format('YYYY-MM-DD')}</div>
+                    <div>{item.UserName}</div>
                   </div>
                   <div>{item.AccountName}</div>
                   {item.PackingDetailRequired ? <Tag style={{borderRadius:'1rem', fontWeight:'bold', fontSize:'1rem'}} color={"#595A5C"}>P</Tag> : null}
