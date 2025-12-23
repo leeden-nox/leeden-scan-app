@@ -22,7 +22,7 @@ export const PickListQtyDetail = () => {
   const [selectedWarehouse, setSelectedWarehouse] = useState("");
   const [modalData, setModalData] = useState([]);
   const location = useLocation();
-  const [showCompletedOnly, setShowCompletedOnly] = useState(false);
+  const [showCompletedOnly, setShowCompletedOnly] = useState(true);
 
   const getPickListQtyDetail = async () => {
     try {

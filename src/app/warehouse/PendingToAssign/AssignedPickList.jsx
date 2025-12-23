@@ -1,13 +1,11 @@
-import { PlusOutlined } from "@ant-design/icons";
-import { FloatButton, Tag } from "antd";
+import { Tag } from "antd";
 import { useEffect, useState } from "react";
 import { Route, Switch, useHistory, useLocation } from "react-router-dom";
 
-import { PathLink } from "../../../constants/PathLink";
-import MobilePageShell from "../../../constants/MobilePageShell";
-import { AxiosWithLoading, ErrorPrinter, SpinLoading } from "../../../constants/Common";
 import { APIHelper } from "../../../constants/APIHelper";
-import moment from "moment";
+import { AxiosWithLoading, ErrorPrinter, SpinLoading } from "../../../constants/Common";
+import MobilePageShell from "../../../constants/MobilePageShell";
+import { PathLink } from "../../../constants/PathLink";
 import UnauthorizedPage from "../../../constants/Unauthorized";
 
 const AssignedPickList = () => {
