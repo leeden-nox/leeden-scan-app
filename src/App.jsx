@@ -30,6 +30,7 @@ import HPRefillingDetail from './app/manufacturing/HPRefilling/hpRefillingDetail
 import PendingAssignPickList from './app/warehouse/PendingToAssign/PendingAssignPickList';
 import PendingAssignPickListDetail from './app/warehouse/PendingToAssign/PendingAssignPickListDetail';
 import AssignedPickList from './app/warehouse/PendingToAssign/AssignedPickList';
+import { QueryInventory } from './app/warehouse/QueryInventory/QueryInventory';
 function App() {
 
   return (
@@ -80,6 +81,8 @@ function App() {
           <Route exact path={PathLink.pendingAssignPickListDetail} component={PendingAssignPickListDetail} />
           <Route exact path={PathLink.assignedPickList} component={AssignedPickList} />
 
+          {/* Query Inventory */}
+          <Route exact path={PathLink.queryInventory} component={QueryInventory} />
         </Switch>
       </BrowserRouter>
     </>
