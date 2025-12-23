@@ -1,5 +1,5 @@
 
-import {  Modal } from "antd";
+import {  message, Modal } from "antd";
 import {  ArrowRightOutlined,CheckCircleOutlined  } from "@ant-design/icons";
 import { useHistory, Route,useLocation, Switch } from "react-router-dom";
 import { useEffect, useState } from "react";
@@ -55,7 +55,7 @@ export default function PickListQty() {
                 <MobilePageShell title={"Pick List"} onBack={() => history.push('/')} onRefresh={getPickListQtyDO}>
                   <SpinLoading />
                   {data.map((doItem) => (
-                    <DOCard key={doItem.DONo} doData={doItem} onRefresh={() => getPickListQtyDO()} />
+                    <DOCard key={doItem.DONo} doData={doItem} onRefresh={() => getPickListQtyDO()} getPickListQtyDO={getPickListQtyDO} />
                   ))}
                 </MobilePageShell>
         </Route>
@@ -66,7 +66,7 @@ export default function PickListQty() {
 
 const { Title, Text } = Typography;
 
-const DOCard = ({ doData, onRefresh }) => {
+const DOCard = ({ doData, onRefresh, getPickListQtyDO }) => {
   const {
     DONo,
     AccountName,
@@ -80,6 +80,7 @@ const DOCard = ({ doData, onRefresh }) => {
     PackingDetailRequired
   } = doData;
   const history = useHistory();
+  const [showModal, setShowModal] = useState(false);
   const routeToDetail = () => {
         history.push({
           pathname: PathLink.pickListQty + "/" + DONo,
@@ -112,6 +113,23 @@ const DOCard = ({ doData, onRefresh }) => {
         onRefresh();
       });
 
+    } catch (error) {
+      ErrorPrinter(error);
+    }
+  };
+
+  const updatePickStatus = async () => {
+    try {
+      let body = {
+        DONo: DONo,
+      };
+      const response = await AxiosWithLoading(
+        APIHelper.postConfig("/logistics/updatePickStatus", body)
+      );
+      if (response.status === 200) {
+        message.success("Pick List status updated successfully");
+      }
+      await getPickListQtyDO();
     } catch (error) {
       ErrorPrinter(error);
     }
@@ -165,12 +183,27 @@ const DOCard = ({ doData, onRefresh }) => {
             marginTop: 12,
           }}
         >
-          <Tag
-            color={StatusName === "Partially Picked" ? "#ECAE1C" : "#595A5C"}
-            style={{ color: "#fff" }}
-          >
-            {StatusName}
-          </Tag>
+          {StatusName === 'Partially Picked' && (
+            <Tag
+              color={StatusName === "Partially Picked" ? "#ECAE1C" : "#595A5C"}
+              style={{ color: "#fff" }}
+              onClick={() => setShowModal(true)}
+            >
+              {StatusName}
+            </Tag>
+          )}
+          {StatusName === 'Picking-In-Progress' && (
+            <Button
+              size="small"
+              style={{background:'#595A5C',color:'white',padding:'0.8rem'}}
+              onClick={(e) => {
+                e.stopPropagation(); // prevent triggering routeToDetail
+                setShowModal(true);
+              }}
+            >
+              {StatusName}
+            </Button>
+          )}
           {PackingDetailRequired ? <Tag style={{borderRadius:'1rem', fontWeight:'bold', fontSize:'1rem'}} color={StatusName === "Partially Picked" ? "#ECAE1C" : "#595A5C"}>P</Tag> : null}
           {isAllPicked === 1 && (
             <Button
@@ -187,6 +220,17 @@ const DOCard = ({ doData, onRefresh }) => {
           <ArrowRightOutlined style={{ fontSize: 16, color: "#595A5C" }} />
         </Space>
       </Space>
+
+      <Modal 
+        open={showModal} 
+        onCancel={(e) => {e.stopPropagation(); setShowModal(false)}} 
+        onOk={(e) => {e.stopPropagation(); updatePickStatus(); setShowModal(false)}}
+        okButtonProps={{ danger: true }}
+        title="Change Status Confirmation"
+        okText="Confirm"
+      >
+        <p>Are you sure to change the status to Partially Picked?</p>
+      </Modal>
     </Card>
   );
 };
