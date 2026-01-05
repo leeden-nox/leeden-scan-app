@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { DeleteOutlined, SearchOutlined, RightOutlined, PlusOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { Button, Card, Col, Collapse, DatePicker, Input, InputNumber, message, Modal, Row, Select, Space, Tag, Typography } from "antd";
-import { AxiosWithLoading, ErrorPrinter, SpinLoading } from "../../../constants/Common";
+import { AxiosWithLoading, ErrorPrinter, playSound, ScanListener, SpinLoading } from "../../../constants/Common";
 import { APIHelper } from "../../../constants/APIHelper";
 import { PathLink } from "../../../constants/PathLink";
 import MobilePageShell from "../../../constants/MobilePageShell";
@@ -30,7 +30,9 @@ const NewGRPO = () => {
       const res = await AxiosWithLoading(
         APIHelper.getConfig("/common/getdocumentseries")
       );
-      setDocSeries(res.data['SAPQuery_Data']);
+      let docs = res.data['SAPQuery_Data'];
+      docs = docs.filter(doc => doc.Document === 'GRPO');
+      setDocSeries(docs);
     } catch (error) {
       ErrorPrinter(error);
     }
@@ -39,6 +41,27 @@ const NewGRPO = () => {
   const postGRPOToSAP = async () => {
     try {
       // 1. document series not null
+      if (poList.every(item => item.VendorCode === poList[0].VendorCode) === false) {
+        message.error("All PO items must be from the same vendor");
+        return;
+      }
+      let body = {
+        DocSeries: data.docSeries,
+        DocDate: data.start.format('YYYY-MM-DD'),
+        VendorRefNo: data.vendor || '',
+        Remarks: data.remarks || '',
+        POItems: poList,
+        IsNew: true,
+        VendorCode: poList[0].VendorCode,
+        VendorName: poList[0].VendorName,
+        CurrentExchangeRate: poList[0].CurrentExchangeRate,
+        CurrencyCode: poList[0].CurrencyCode,
+        Purchaser: poList[0].Purchaser,
+      }
+      const res = await AxiosWithLoading(
+        APIHelper.postConfig("/good/warehousePostToSap", body)
+      );
+      console.log('data: ', body, res.data)
     }
     catch (error) {
       ErrorPrinter(error);
@@ -85,6 +108,7 @@ const NewGRPO = () => {
                 filterOption={(input, option) => option.children.toLowerCase().includes(input.toLowerCase())}
                 onChange={(value) => setData({...data, docSeries: value})}
                 style={{marginTop:10, width:'100%'}}
+                value={data.docSeries}
               >
                 {docSeries.map((item, index) => (
                   <Select.Option key={index} value={item.SeriesName}>
@@ -173,7 +197,7 @@ const NewGRPO = () => {
             <Button
               type="primary"
               block
-              onClick={() => {}}
+              onClick={() => postGRPOToSAP()}
               style={{ backgroundColor: "#377188", marginBottom: '0.5rem' }}
             >
               Post to SAP
@@ -238,7 +262,8 @@ const SearchPOModal = ({visible, onClose, setPoList, poList}) => {
       const res = await AxiosWithLoading(
         APIHelper.getConfig("/good/getopenpo?vendorname=" + (search.vendorName || '') + "&prodcode=" + (search.productCode || '') + "&prodname=" + (search.productName || '') + "&pono=" + (search.purchaseOrderNo || ''))
       );
-      console.log('data: ', res['SAPQuery_Data']);
+      setData(res.data['SAPQuery_Data']);
+      console.log('data: ', res.data['SAPQuery_Data']);
       // setData([
       //   {
       //       "LineItemNo": "3",
@@ -272,7 +297,7 @@ const SearchPOModal = ({visible, onClose, setPoList, poList}) => {
       //       "LineDiscount": "0.000000",
       //       "TaxType": "PN",
       //       "Warehouse": "G02",
-      //       "Field32": "USD",
+      //       "CurrencyCode": "USD",
       //       "Field33": "0.000000",
       //       "Field34": "3600.000000",
       //       "Field35": "85279",
@@ -316,7 +341,7 @@ const SearchPOModal = ({visible, onClose, setPoList, poList}) => {
       //       "LineDiscount": "0.000000",
       //       "TaxType": "PN",
       //       "Warehouse": "G02",
-      //       "Field32": "USD",
+      //       "CurrencyCode": "USD",
       //       "Field33": "0.000000",
       //       "Field34": "6180.300000",
       //       "Field35": "89802",
@@ -352,6 +377,11 @@ const SearchPOModal = ({visible, onClose, setPoList, poList}) => {
     catch (error) {
       ErrorPrinter(error);
     }
+  }
+
+  const scanBarcode = (barcode) => {
+    setSearch({...search, productCode: barcode})
+    playSound();
   }
 
   return visible && (
@@ -448,6 +478,7 @@ const SearchPOModal = ({visible, onClose, setPoList, poList}) => {
             </Card>
           ))}
         </div>
+        <ScanListener onScanDetected={(barcode) => scanBarcode(barcode)} />
       </div>
     </MobilePageShell>
   )
