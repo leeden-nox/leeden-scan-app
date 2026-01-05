@@ -31,6 +31,7 @@ import PendingAssignPickList from './app/warehouse/PendingToAssign/PendingAssign
 import PendingAssignPickListDetail from './app/warehouse/PendingToAssign/PendingAssignPickListDetail';
 import AssignedPickList from './app/warehouse/PendingToAssign/AssignedPickList';
 import { QueryInventory } from './app/warehouse/QueryInventory/QueryInventory';
+import { QueryInventoryDetail } from './app/warehouse/QueryInventory/QueryInventoryDetail';
 function App() {
 
   return (
@@ -83,6 +84,7 @@ function App() {
 
           {/* Query Inventory */}
           <Route exact path={PathLink.queryInventory} component={QueryInventory} />
+          <Route exact path={PathLink.queryInventoryDetail} component={QueryInventoryDetail} />
         </Switch>
       </BrowserRouter>
     </>

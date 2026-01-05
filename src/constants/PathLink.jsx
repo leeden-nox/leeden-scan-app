@@ -25,4 +25,5 @@ export const PathLink = {
   pendingAssignPickListDetail: '/pending-assign-pick-list/:doNo',
   assignedPickList: '/assigned-pick-list',
   queryInventory: '/query-inventory',
+  queryInventoryDetail: '/query-inventory/:prodCode/:warehouse',
 }
