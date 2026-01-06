@@ -57,7 +57,10 @@ const AssignedPickList = () => {
                     <div>{item.UserName}</div>
                   </div>
                   <div>{item.AccountName}</div>
-                  {item.PackingDetailRequired ? <Tag style={{borderRadius:'1rem', fontWeight:'bold', fontSize:'1rem'}} color={"#595A5C"}>P</Tag> : null}
+                  <div className="d-flex justify-content-between">
+                    {item.PackingDetailRequired ? <Tag style={{borderRadius:'1rem', fontWeight:'bold', fontSize:'1rem'}} color={"#595A5C"}>P</Tag> : null}
+                    {item.DocTagNo ? <Tag style={{fontSize:'1rem', marginLeft:'auto'}} color={"#595A5C"}>{item.DocTagNo}</Tag> : null}
+                  </div>
                 </div>
               ))}
             </div>

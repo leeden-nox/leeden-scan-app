@@ -8,6 +8,7 @@ import { APIHelper } from "../../../constants/APIHelper";
 import { PathLink } from "../../../constants/PathLink";
 import MobilePageShell from "../../../constants/MobilePageShell";
 import { SwipeAction, TextArea } from "antd-mobile";
+import GRPOBatch from "./GRPOBatch";
 const { Text } = Typography;
 
 const NewGRPO = () => {
@@ -16,6 +17,8 @@ const NewGRPO = () => {
   const [data, setData] = useState({start: dayjs()});
   const [poList, setPoList] = useState([]);
   const [searchPoVisible, setSearchPoVisible] = useState(false);
+  const [showBatchDetail, setShowBatchDetail] = useState({show: false, item: null});
+  const [showSerialDetail, setShowSerialDetail] = useState({show: false, item: null});
   const [showUpdateQtyModal, setShowUpdateQtyModal] = useState({show: false, item: null});
 
   window.addEventListener("popstate", function () {
@@ -85,6 +88,13 @@ const NewGRPO = () => {
       onClose={() => setSearchPoVisible(false)}
       setPoList={setPoList}
       poList={poList}
+    /> :
+    showBatchDetail.show ? 
+    <GRPOBatch 
+      item={showBatchDetail.item}
+      poList={poList}
+      setPoList={setPoList}
+      onBack={() => setShowBatchDetail({show: false, item: null})}  
     /> :
   ( 
     <MobilePageShell title={"New GRN"} onBack={() => history.push(PathLink.processingGRPO)} onRefresh={()=>{}}>
@@ -165,13 +175,17 @@ const NewGRPO = () => {
                 key={index}
                 style={{ margin: 12, borderRadius: 12 }}
                 bodyStyle={{ padding: 10 }}
+                onClick={() => {
+                  if (item.IsTrackedBatch === '1') setShowBatchDetail({show: true, item}); 
+                  else if (item.IsTrackedSerial === '1') setShowSerialDetail({show: true, item})
+                }}
               >
                 <Row justify="space-between" align="middle">
                   <Text strong>{item.SAPDocNum}</Text>
                   <RightOutlined />
                 </Row>
                 <Row justify="space-between">
-                  <Col style={{width:'85%'}}>
+                  <Col style={{width:'80%'}}>
                     <Text style={{fontSize:'0.8rem'}} strong>{item.ItemCode}</Text>
                     <br />
                     <Text style={{fontSize:'0.8rem'}} type="secondary">{item.ItemName}</Text>
@@ -180,12 +194,12 @@ const NewGRPO = () => {
                 </Row>
                 <Row align="middle" style={{ marginTop: 5 }} gutter={8}>
                   <Col>
-                    <Tag color={item.IsTrackedBatch === '1' ? 'orange' : item.IsTrackedSerial === '1' ? 'bluelight' : "green"}>{item.IsTrackedBatch === '1' ? 'Batch' : item.IsTrackedSerial === '1' ? 'Serial' : 'Non BatchSerial'}</Tag>
+                    <Tag color={item.IsTrackedBatch === '1' ? 'orange' : item.IsTrackedSerial === '1' ? 'blue' : "green"}>{item.IsTrackedBatch === '1' ? 'Batch' : item.IsTrackedSerial === '1' ? 'Serial' : 'Non BatchSerial'}</Tag>
                   </Col>
                   <Col flex="auto" />
-                  <Col onClick={() => setShowUpdateQtyModal({show: true, item})}>
+                  {item.IsTrackedBatch === '0' && item.IsTrackedSerial === '0' && <Col onClick={() => setShowUpdateQtyModal({show: true, item})}>
                     <Text strong>{String(Number(item.Quantity))} out of {String(Number(item.OpenQty))}&nbsp;{item.BasedUOM}&nbsp;</Text>
-                  </Col>
+                  </Col>}
                 </Row>
               </Card>
             </SwipeAction>
@@ -353,6 +367,94 @@ const SearchPOModal = ({visible, onClose, setPoList, poList}) => {
       //       "IsBin": false,
       //       "DefaultSystemBin": ""
       //   },
+      //   {
+      //       "LineItemNo": "0",
+      //       "OpenQty": "31614.000000",
+      //       "Purchaser": "S10330",
+      //       "PurchaserName": "SHELLY TANG",
+      //       "CurrentExchangeRate": "1.270700",
+      //       "UOM": "LB",
+      //       "BasedQty": "1.000000",
+      //       "BasedUOM": "LB",
+      //       "ConvertedQty": "1.000000",
+      //       "ConvertedUOM": "LB",
+      //       "IsTrackedBatch": "1",
+      //       "IsTrackedSerial": "0",
+      //       "UpdateDate": "9/16/2025 12:00:00 AM",
+      //       "UpdateTime": "110505",
+      //       "SAPDocNum": "6021114",
+      //       "CustomDocNum": "PRW2501743",
+      //       "ItemCode": "H1398245114",
+      //       "ItemName": "HOBART FLUX CORED WIRE FABCO XL 550 VP(LT) S245112-053 0.045” 1.2MM 33LB/SPOOL",
+      //       "DocStatus": "O",
+      //       "LineStatus": "O",
+      //       "VendorCode": "C2LI004",
+      //       "VendorName": "ITW WELDING S'PORE PL-HOBART",
+      //       "UnitPrice": "2.273000",
+      //       "SAPDocEntry": "64583",
+      //       "Dimension1": "WSD",
+      //       "Dimension2": "L2NA",
+      //       "Dimension3": "L3NA",
+      //       "Dimension4": "L4NA",
+      //       "LineDiscount": "0.000000",
+      //       "TaxType": "PN",
+      //       "Warehouse": "W02",
+      //       "Field32": "USD",
+      //       "Field33": "0.000000",
+      //       "Field34": "2.273000",
+      //       "Field35": "0",
+      //       "Field36": "Y",
+      //       "Field37": null,
+      //       "Field38": null,
+      //       "Field39": null,
+      //       "Field40": null,
+      //       "IsBin": false,
+      //       "DefaultSystemBin": ""
+      //   },
+      //   {
+      //       "LineItemNo": "0",
+      //       "OpenQty": "1.000000",
+      //       "Purchaser": "S10346",
+      //       "PurchaserName": "ANN LIM",
+      //       "CurrentExchangeRate": "1.276600",
+      //       "UOM": "EA",
+      //       "BasedQty": "1.000000",
+      //       "BasedUOM": "EA",
+      //       "ConvertedQty": "1.000000",
+      //       "ConvertedUOM": "EA",
+      //       "IsTrackedBatch": "0",
+      //       "IsTrackedSerial": "1",
+      //       "UpdateDate": "10/10/2025 12:00:00 AM",
+      //       "UpdateTime": "151905",
+      //       "SAPDocNum": "6021258",
+      //       "CustomDocNum": "PRW2501902",
+      //       "ItemCode": "O2396930000",
+      //       "ItemName": "OTC P6930F00 851590 P.C. BOARD",
+      //       "DocStatus": "O",
+      //       "LineStatus": "O",
+      //       "VendorCode": "C2OO003",
+      //       "VendorName": "OTC DAIHEN ASIA CO.,LTD.",
+      //       "UnitPrice": "485.000000",
+      //       "SAPDocEntry": "65353",
+      //       "Dimension1": "WSD",
+      //       "Dimension2": "L2NA",
+      //       "Dimension3": "L3NA",
+      //       "Dimension4": "L4NA",
+      //       "LineDiscount": "0.000000",
+      //       "TaxType": "PN",
+      //       "Warehouse": "W02",
+      //       "Field32": "USD",
+      //       "Field33": "0.000000",
+      //       "Field34": "485.000000",
+      //       "Field35": "0",
+      //       "Field36": "Y",
+      //       "Field37": null,
+      //       "Field38": null,
+      //       "Field39": null,
+      //       "Field40": null,
+      //       "IsBin": false,
+      //       "DefaultSystemBin": ""
+      //   },
       // ])
     } catch (error) {
       ErrorPrinter(error);
@@ -361,11 +463,11 @@ const SearchPOModal = ({visible, onClose, setPoList, poList}) => {
 
   const addPOItem = (item) => {
     try {
-      if (!item.Quantity || parseFloat(item.Quantity) <= 0) {
+      if ((!item.Quantity || parseFloat(item.Quantity) && item.IsTrackedBatch === '0' && item.IsTrackedSerial === '0') <= 0) {
         message.error("Please enter a valid quantity");
         return;
       }
-      else if (parseFloat(item.Quantity) > parseFloat(item.OpenQty)) {
+      else if (parseFloat(item.Quantity) > parseFloat(item.OpenQty) && item.IsTrackedBatch === '0' && item.IsTrackedSerial === '0') {
         message.error("Quantity cannot be more than Open Quantity");
         return;
       }
@@ -388,14 +490,17 @@ const SearchPOModal = ({visible, onClose, setPoList, poList}) => {
     <MobilePageShell title={'Search PO'} onBack={onClose}>
       <SpinLoading />
       <div>
-        <Input 
-          placeholder="Purchase Order No" 
-          className="m-2" 
-          style={{width:'90vw'}} 
-          value={search.purchaseOrderNo} 
-          onChange={(e) => setSearch({...search, purchaseOrderNo: e.target.value})} 
-          suffix={<SearchOutlined onClick={() => getOpenPO()} style={{ color: 'rgba(0,0,0,.45)' }} />}
-        />
+        <div className="d-flex align-items-center">
+          <Input 
+            placeholder="Purchase Order No" 
+            className="m-2" 
+            // style={{width:'90vw'}} 
+            value={search.purchaseOrderNo} 
+            onChange={(e) => setSearch({...search, purchaseOrderNo: e.target.value})} 
+            suffix={<SearchOutlined onClick={() => getOpenPO()} style={{ color: 'rgba(0,0,0,.45)' }} />}
+          />
+          <Button className="mr-5" onClick={() => getOpenPO()}>Search</Button>
+        </div>
         <Collapse ghost>
           <Collapse.Panel style={{fontSize:'small', paddingTop:'0px', paddingBottom: '0px'}} header="Filters" key="1">
             <Input 
@@ -438,7 +543,7 @@ const SearchPOModal = ({visible, onClose, setPoList, poList}) => {
                   <br />
                   <Text type="secondary">{item.VendorName}</Text>
                 </Col>
-                <Col style={{ textAlign: "center" }}>
+                {item.IsTrackedBatch === '0' && item.IsTrackedSerial === '0' && <Col style={{ textAlign: "center" }}>
                   <InputNumber min={0} value={item.Quantity} controls={false}
                     style={{width:70, textAlign:'center'}}
                     onChange={(val) => {
@@ -448,7 +553,7 @@ const SearchPOModal = ({visible, onClose, setPoList, poList}) => {
                   />
                   <br />
                   <Text type="secondary">{item.BasedUOM}</Text>
-                </Col>
+                </Col>}
               </Row>
               <Row justify="space-between" style={{ marginTop: 8 }}>
                 <Col style={{width:'80%'}}>
@@ -460,7 +565,7 @@ const SearchPOModal = ({visible, onClose, setPoList, poList}) => {
               </Row>
               <Row align="middle" style={{ marginTop: 10 }} gutter={8}>
                 <Col>
-                  <Tag color={item.IsTrackedBatch === '1' ? 'orange' : item.IsTrackedSerial === '1' ? 'bluelight' : "green"}>{item.IsTrackedBatch === '1' ? 'Batch' : item.IsTrackedSerial === '1' ? 'Serial' : 'Non BatchSerial'}</Tag>
+                  <Tag color={item.IsTrackedBatch === '1' ? 'orange' : item.IsTrackedSerial === '1' ? 'blue' : "green"}>{item.IsTrackedBatch === '1' ? 'Batch' : item.IsTrackedSerial === '1' ? 'Serial' : 'Non BatchSerial'}</Tag>
                 </Col>
                 <Col flex="auto" />
                 <Col>
