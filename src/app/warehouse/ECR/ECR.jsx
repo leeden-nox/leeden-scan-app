@@ -75,7 +75,7 @@ export const ECR = () => {
         Date: selectedDate.format("YYYY-MM-DD"), //using today's date
       };
       const responseParam = await AxiosWithLoading(
-        APIHelper.postConfig("/logistics/getDriverECRForConvert", body)
+        APIHelper.postConfig("/logistics/getDriverECRForConvert", body),
       );
       setData(responseParam.data.Table);
     } catch (error) {
@@ -93,7 +93,7 @@ export const ECR = () => {
           "ECRRemarkList,ECRStatusList,OwnerTypeList,Warehouse,DriverECRFaultyReasons",
       };
       const responseParam = await AxiosWithLoading(
-        APIHelper.postConfig("/common/ParameterData", body)
+        APIHelper.postConfig("/common/ParameterData", body),
       );
       setEcrRemarkList(responseParam.data.ECRRemarkList);
       setEcrStatusList(responseParam.data.ECRStatusList);
@@ -116,7 +116,7 @@ export const ECR = () => {
     try {
       const selectedSerialNos = data
         .filter((record) =>
-          rowSelection.selectedRowKeys.includes(record.SerialNo)
+          rowSelection.selectedRowKeys.includes(record.SerialNo),
         )
         .map((record) => record.SerialNo);
 
@@ -126,7 +126,7 @@ export const ECR = () => {
       };
 
       const responseParam = await AxiosWithLoading(
-        APIHelper.postConfig("/logistics/convertDriverEcrToECR", body)
+        APIHelper.postConfig("/logistics/convertDriverEcrToECR", body),
       );
 
       if (responseParam.status === 200) {
@@ -160,12 +160,12 @@ export const ECR = () => {
   };
   //Scan SerialNo
   const handleSubmit = (barcode) => {
-const trimmed = (barcode || "").trim().toUpperCase();
+    const trimmed = (barcode || "").trim().toUpperCase();
 
-// find if serial exists in data
-const record = data.find(record =>
-  (record?.SerialNo ?? "").toString().toUpperCase() === trimmed
-);
+    // find if serial exists in data
+    const record = data.find(
+      (record) => (record?.SerialNo ?? "").toString().toUpperCase() === trimmed,
+    );
 
     if (!record) {
       message.error(`Serial ${trimmed} not found`);
@@ -311,7 +311,9 @@ const record = data.find(record =>
                 }}
                 onClick={() => {
                   const selectedSerialNos = data.filter((record) =>
-                    rowSelection.selectedRowKeys.includes(record.SerialNo)
+                    rowSelection.selectedRowKeys
+                      .map((key) => key.toUpperCase())
+                      .includes(record.SerialNo.toUpperCase()),
                   );
                   setSelectedSerialNosList(selectedSerialNos);
                   setShowConfirmModal(true);
@@ -362,7 +364,7 @@ const record = data.find(record =>
                 >
                   {filteredData.map((record) => {
                     const isSelected = rowSelection.selectedRowKeys.includes(
-                      record.SerialNo
+                      record.SerialNo,
                     );
 
                     return (
@@ -374,7 +376,7 @@ const record = data.find(record =>
                           if (isSelected) {
                             // allow deselect on tap
                             const newKeys = rowSelection.selectedRowKeys.filter(
-                              (k) => k !== record.SerialNo
+                              (k) => k !== record.SerialNo,
                             );
                             rowSelection.onChange(newKeys);
                           }
@@ -415,7 +417,7 @@ const record = data.find(record =>
                                 // allow only uncheck
                                 const newKeys =
                                   rowSelection.selectedRowKeys.filter(
-                                    (k) => k !== record.SerialNo
+                                    (k) => k !== record.SerialNo,
                                   );
                                 rowSelection.onChange(newKeys);
                               }
@@ -615,24 +617,24 @@ const SerialNoEditModal = ({
       console.log(body);
 
       const responseParam = await AxiosWithLoading(
-        APIHelper.postConfig("/logistics/modifyDriverECRDetail", body)
+        APIHelper.postConfig("/logistics/modifyDriverECRDetail", body),
       );
       if (responseParam.status === 200) {
         message.success(
-          "Serial :" + selectedSerialObject.SerialNo + " updated successfully"
+          "Serial :" + selectedSerialObject.SerialNo + " updated successfully",
         );
         onRefresh();
         return;
       } else {
         message.error(
-          "Serial :" + selectedSerialObject.SerialNo + " updated failed"
+          "Serial :" + selectedSerialObject.SerialNo + " updated failed",
         );
         return;
       }
     } catch (error) {
       ErrorPrinter(error, history);
       message.error(
-        "Serial :" + selectedSerialObject.SerialNo + " updated failed"
+        "Serial :" + selectedSerialObject.SerialNo + " updated failed",
       );
     }
     form.resetFields();
@@ -739,7 +741,7 @@ const ConvertConfirmModal = ({
   //const [open, setOpen] = useState(false);
   const total = selectedSerialNos.length;
   const faulty = selectedSerialNos.filter(
-    (x) => x.Remarks && x.Remarks.trim() !== ""
+    (x) => x.Remarks && x.Remarks.trim() !== "",
   ).length;
   const ok = total - faulty;
   const fullGas = selectedSerialNos.filter((x) => x.IsFullGasReturn).length;
@@ -843,7 +845,7 @@ const ConversionResultModal = ({ visible, onClose, convertResults }) => {
       };
 
       const responseParam = await AxiosWithLoading(
-        APIHelper.postConfig("/logistics/getECR2Results", body)
+        APIHelper.postConfig("/logistics/getECR2Results", body),
       );
 
       if (responseParam.status === 200) {
