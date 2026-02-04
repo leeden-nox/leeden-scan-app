@@ -107,8 +107,7 @@ export const ECR = () => {
     }
   };
   const handleConvertDriverECR = async () => {
-
-    console.log(data)
+    console.log(data);
     if (!warehouse) {
       message.warning("Please select a warehouse first");
       return;
@@ -116,9 +115,7 @@ export const ECR = () => {
 
     setIsLoading(true);
     try {
-
-
-      console.log(data)
+      console.log(data);
       const selectedSerialNos = data
         .filter((record) =>
           rowSelection.selectedRowKeys.includes(record.SerialNo),
@@ -319,10 +316,13 @@ export const ECR = () => {
                   width: 90, // adjust width until it wraps nicely
                 }}
                 onClick={() => {
-                  const selectedSerialNos = data.filter((record) =>
-                    rowSelection.selectedRowKeys
-                      .map((key) => key.toUpperCase())
-                      .includes(record.SerialNo.toUpperCase()),
+                  const selectedSerialNos = data.filter(
+                    (record) =>
+                      typeof record.SerialNo === "string" &&
+                      rowSelection.selectedRowKeys
+                        .filter((key) => typeof key === "string")
+                        .map((key) => key.toUpperCase())
+                        .includes(record.SerialNo.toUpperCase()),
                   );
                   setSelectedSerialNosList(selectedSerialNos);
                   setShowConfirmModal(true);
