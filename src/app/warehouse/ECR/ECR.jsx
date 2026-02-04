@@ -116,9 +116,11 @@ export const ECR = () => {
     try {
       const selectedSerialNos = data
         .filter((record) =>
-          rowSelection.selectedRowKeys.includes(record.SerialNo),
+          rowSelection.selectedRowKeys
+            .map((key) => key.toUpperCase())
+            .includes(record.SerialNo?.toUpperCase()),
         )
-        .map((record) => record.SerialNo);
+        .map((record) => record.SerialNo.toUpperCase());
 
       let body = {
         SerialList: selectedSerialNos,
