@@ -107,6 +107,8 @@ export const ECR = () => {
     }
   };
   const handleConvertDriverECR = async () => {
+
+    console.log(data)
     if (!warehouse) {
       message.warning("Please select a warehouse first");
       return;
