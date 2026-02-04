@@ -114,11 +114,15 @@ export const ECR = () => {
 
     setIsLoading(true);
     try {
+      const selectedKeysUpper = rowSelection.selectedRowKeys
+        .filter(Boolean)
+        .map((key) => key.toUpperCase());
+
       const selectedSerialNos = data
-        .filter((record) =>
-          rowSelection.selectedRowKeys
-            .map((key) => key.toUpperCase())
-            .includes(record.SerialNo?.toUpperCase()),
+        .filter(
+          (record) =>
+            record.SerialNo &&
+            selectedKeysUpper.includes(record.SerialNo.toUpperCase()),
         )
         .map((record) => record.SerialNo.toUpperCase());
 
