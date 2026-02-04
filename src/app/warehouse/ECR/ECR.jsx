@@ -114,6 +114,9 @@ export const ECR = () => {
 
     setIsLoading(true);
     try {
+
+
+      console.log(data)
       const selectedSerialNos = data
         .filter((record) =>
           rowSelection.selectedRowKeys.includes(record.SerialNo),
