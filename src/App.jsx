@@ -33,6 +33,7 @@ import AssignedPickList from "./app/warehouse/PendingToAssign/AssignedPickList";
 import { QueryInventory } from "./app/warehouse/QueryInventory/QueryInventory";
 import { QueryInventoryDetail } from "./app/warehouse/QueryInventory/QueryInventoryDetail";
 import { COPContainerSearch } from "./app/logistics/COPContainerSearch/COPContainerSearch";
+import ManualBarcodePrinting from "./app/logistics/ManualBarcodePrinting/ManualBarcodePrinting";
 function App() {
   return (
     <>
@@ -174,6 +175,11 @@ function App() {
             component={COPContainerSearch}
           />
         </Switch>
+        <Route
+          exact
+          path={PathLink.ManualBarcodePrinting}
+          component={ManualBarcodePrinting}
+        />
       </BrowserRouter>
     </>
   );

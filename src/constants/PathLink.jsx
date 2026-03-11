@@ -28,4 +28,5 @@ export const PathLink = {
   queryInventory: "/query-inventory",
   queryInventoryDetail: "/query-inventory/:prodCode/:warehouse",
   COPContainerSearch: "/COPContainerSearch",
+  ManualBarcodePrinting: "/ManualBarcodePrinting"
 };
