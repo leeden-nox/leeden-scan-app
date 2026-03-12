@@ -12,25 +12,47 @@ export default function ManualBarcodePrinting() {
   // Your PRN template here
   // -------------------------
   const prnTemplate = `
+CT~~CD,~CC^~CT~
 ^XA
-^FO50,50^BCN,100,Y,N,N
-^FDserialNo1^FS
-
-^FO50,200^BCN,100,Y,N,N
-^FDserialNo2^FS
-
-^FO50,350^BCN,100,Y,N,N
-^FDserialNo3^FS
-
-^FO50,500^BCN,100,Y,N,N
-^FDserialNo4^FS
+~TA000
+~JSN
+^LT0
+^MNW
+^MTT
+^PON
+^PMN
+^LH0,0
+^JMA
+^PR6,6
+~SD15
+^JUS
+^LRN
+^CI27
+^PA0,1,1,0
+^XZ
+^XA
+^MMT
+^PW831
+^LL1039
+^LS0
+^BY3,3,166^FT10,183^BCN,,Y,N
+^FH\^FD>:serialNo1^FS
+^BY3,3,166^FT10,393^BCN,,Y,N
+^FH\^FD>:serialNo2^FS
+^BY3,3,166^FT10,598^BCN,,Y,N
+^FH\^FD>:serialNo3^FS
+^BY3,3,166^FT10,795^BCN,,Y,N
+^FH\^FD>:serialNo4^FS
+^BY3,3,166^FT10,998^BCN,,Y,N
+^FH\^FD>:serialNo5^FS
+^PQ1,0,1,Y
 ^XZ
 `;
 
   // -------------------------
   // Split into groups of 4
   // -------------------------
-  function chunkSerials(serials, size = 4) {
+  function chunkSerials(serials, size = 5) {
     const chunks = [];
 
     for (let i = 0; i < serials.length; i += size) {
@@ -48,7 +70,8 @@ export default function ManualBarcodePrinting() {
       .replace(/serialNo1/g, group[0] ?? "")
       .replace(/serialNo2/g, group[1] ?? "")
       .replace(/serialNo3/g, group[2] ?? "")
-      .replace(/serialNo4/g, group[3] ?? "");
+      .replace(/serialNo4/g, group[3] ?? "")
+      .replace(/serialNo4/g, group[4] ?? "");
   }
 
   // -------------------------
@@ -95,7 +118,7 @@ export default function ManualBarcodePrinting() {
     .map(s => s.trim())
     .filter(Boolean).length;
 
-  const labelCount = Math.ceil(serialCount / 4);
+  const labelCount = Math.ceil(serialCount / 5);
 
   return (
     <Card style={{ maxWidth: 600, margin: "40px auto" }}>
