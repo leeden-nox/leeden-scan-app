@@ -71,7 +71,7 @@ export default function ManualBarcodePrinting() {
       .replace(/serialNo2/g, group[1] ?? "")
       .replace(/serialNo3/g, group[2] ?? "")
       .replace(/serialNo4/g, group[3] ?? "")
-      .replace(/serialNo4/g, group[4] ?? "");
+      .replace(/serialNo5/g, group[4] ?? "");
   }
 
   // -------------------------
