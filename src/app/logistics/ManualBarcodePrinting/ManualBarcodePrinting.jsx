@@ -39,15 +39,17 @@ export default function ManualBarcodePrinting() {
 ^FH\^FD>:serialNo2^FS
 ^BY3,3,108^FT8,453^BCN,,Y,N
 ^FH\^FD>:serialNo3^FS
-^FO8,523^GFA,361,6812,52,:Z64:eJzt0qFOBDEUBdA2Fc+1P/Bof6NufmlGgdpdgsB1f6mocXwBos0IbDcIlqSZ0lks4k2CQLxrrjrm5tbRi6ml0VctUEMLwgVQ56iKT3Ku8ppMwwOo1bdLc6dhOUdR2bBhw4YNGzZs2LBhw4YNGzZs2LBhw4bNvzOcP00SGuHWu4ztRu40bq8RP0YRjSrm8S0dtHuWBYgGqnupuXUDlWo0DrnmOdzNZtVUox9yWp42Y5FozGmcYlIB360hm3K8xOQCfiJ4ooG6mRbwHmEkGrGOMuaPgAPC8Uo0tpu+AQ7WUI3WfroZZyzVgB5yXObNrNRf9x/kmPsGBirVyP63mL5e0cjyu/kGoMF6AA==:C63B
 ^BY3,3,108^FT8,792^BCN,,Y,N
 ^FH\^FD>:serialNo5^FS
 ^BY3,3,108^FT8,964^BCN,,Y,N
 ^FH\^FD>:serialNo6^FS
 ^BY3,3,108^FT8,117^BCN,,Y,N
 ^FH\^FD>:serialNo1^FS
+^BY3,3,108^FT8,612^BCN,,Y,N
+^FH\^FD>:serialNo4^FS
 ^PQ1,0,1,Y
 ^XZ
+
 `;
 
   // -------------------------
