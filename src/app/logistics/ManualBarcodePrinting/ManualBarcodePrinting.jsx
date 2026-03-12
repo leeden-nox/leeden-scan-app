@@ -33,18 +33,19 @@ export default function ManualBarcodePrinting() {
 ^XA
 ^MMT
 ^PW831
-^LL1039
+^LL1007
 ^LS0
-^BY3,3,166^FT10,183^BCN,,Y,N
-^FH\^FD>:serialNo1^FS
-^BY3,3,166^FT10,393^BCN,,Y,N
+^BY3,3,108^FT8,278^BCN,,Y,N
 ^FH\^FD>:serialNo2^FS
-^BY3,3,166^FT10,598^BCN,,Y,N
+^BY3,3,108^FT8,453^BCN,,Y,N
 ^FH\^FD>:serialNo3^FS
-^BY3,3,166^FT10,795^BCN,,Y,N
-^FH\^FD>:serialNo4^FS
-^BY3,3,166^FT10,998^BCN,,Y,N
+^FO8,523^GFA,361,6812,52,:Z64:eJzt0qFOBDEUBdA2Fc+1P/Bof6NufmlGgdpdgsB1f6mocXwBos0IbDcIlqSZ0lks4k2CQLxrrjrm5tbRi6ml0VctUEMLwgVQ56iKT3Ku8ppMwwOo1bdLc6dhOUdR2bBhw4YNGzZs2LBhw4YNGzZs2LBhw4bNvzOcP00SGuHWu4ztRu40bq8RP0YRjSrm8S0dtHuWBYgGqnupuXUDlWo0DrnmOdzNZtVUox9yWp42Y5FozGmcYlIB360hm3K8xOQCfiJ4ooG6mRbwHmEkGrGOMuaPgAPC8Uo0tpu+AQ7WUI3WfroZZyzVgB5yXObNrNRf9x/kmPsGBirVyP63mL5e0cjyu/kGoMF6AA==:C63B
+^BY3,3,108^FT8,792^BCN,,Y,N
 ^FH\^FD>:serialNo5^FS
+^BY3,3,108^FT8,964^BCN,,Y,N
+^FH\^FD>:serialNo6^FS
+^BY3,3,108^FT8,117^BCN,,Y,N
+^FH\^FD>:serialNo1^FS
 ^PQ1,0,1,Y
 ^XZ
 `;
@@ -52,7 +53,7 @@ export default function ManualBarcodePrinting() {
   // -------------------------
   // Split into groups of 4
   // -------------------------
-  function chunkSerials(serials, size = 5) {
+  function chunkSerials(serials, size = 6) {
     const chunks = [];
 
     for (let i = 0; i < serials.length; i += size) {
@@ -71,7 +72,8 @@ export default function ManualBarcodePrinting() {
       .replace(/serialNo2/g, group[1] ?? "")
       .replace(/serialNo3/g, group[2] ?? "")
       .replace(/serialNo4/g, group[3] ?? "")
-      .replace(/serialNo5/g, group[4] ?? "");
+      .replace(/serialNo5/g, group[4] ?? "")
+      .replace(/serialNo6/g, group[5] ?? "");
   }
 
   // -------------------------
@@ -94,7 +96,7 @@ export default function ManualBarcodePrinting() {
       return;
     }
 
-    const groups = chunkSerials(serials, 4);
+    const groups = chunkSerials(serials, 6);
 
     let finalLabel = "";
 
@@ -118,7 +120,7 @@ export default function ManualBarcodePrinting() {
     .map(s => s.trim())
     .filter(Boolean).length;
 
-  const labelCount = Math.ceil(serialCount / 5);
+  const labelCount = Math.ceil(serialCount / 6);
 
   return (
     <Card style={{ maxWidth: 600, margin: "40px auto" }}>
